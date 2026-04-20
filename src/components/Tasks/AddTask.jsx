@@ -1,24 +1,48 @@
-import { useState } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 const AddTask = ({ onTaskAdded }) => {
-  const [formData, setFormData] = useState({ 
-    title: '', 
-    energyRequired: 3, 
-    urgency: 'soon',
-    dueDate: ''
+  const [formData, setFormData] = useState({
+    title: "",
+    energyRequired: 3,
+    urgency: "soon",
+    dueDate: "",
   });
+
+  useEffect(() => {
+    if (formData.dueDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const due = new Date(formData.dueDate);
+      due.setHours(0, 0, 0, 0);
+
+      const diffTime = due - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays <= 0) {
+        setFormData((prev) => ({ ...prev, urgency: "now" }));
+      } else if (diffDays <= 3) {
+        setFormData((prev) => ({ ...prev, urgency: "soon" }));
+      }
+    }
+  }, [formData.dueDate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/tasks`, 
-        formData, 
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/tasks`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       onTaskAdded(res.data);
-      setFormData({ title: '', energyRequired: 3, urgency: 'soon', dueDate: '' });
+      setFormData({
+        title: "",
+        energyRequired: 3,
+        urgency: "soon",
+        dueDate: "",
+      });
     } catch (err) {
       alert(err.response?.data?.message || "Check your input");
     }
@@ -28,10 +52,10 @@ const AddTask = ({ onTaskAdded }) => {
     <form onSubmit={handleSubmit} className="card p-3 mb-4 shadow-sm">
       <div className="mb-2">
         <label className="small fw-bold">Task Title</label>
-        <input 
-          className="form-control" 
-          value={formData.title} 
-          onChange={(e) => setFormData({...formData, title: e.target.value})} 
+        <input
+          className="form-control"
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           placeholder="What needs doing?"
           required
         />
@@ -39,18 +63,28 @@ const AddTask = ({ onTaskAdded }) => {
       <div className="row g-2">
         <div className="col-md-4">
           <label className="small fw-bold">Energy (1-5)</label>
-          <input 
-            type="number" min="1" max="5" className="form-control" 
+          <input
+            type="number"
+            min="1"
+            max="5"
+            className="form-control"
             value={formData.energyRequired}
-            onChange={(e) => setFormData({...formData, energyRequired: Number(e.target.value)})}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                energyRequired: Number(e.target.value),
+              })
+            }
           />
         </div>
         <div className="col-md-4">
           <label className="small fw-bold">Urgency</label>
-          <select 
-            className="form-select" 
+          <select
+            className="form-select"
             value={formData.urgency}
-            onChange={(e) => setFormData({...formData, urgency: e.target.value})}
+            onChange={(e) =>
+              setFormData({ ...formData, urgency: e.target.value })
+            }
           >
             <option value="later">later</option>
             <option value="soon">soon</option>
@@ -59,10 +93,13 @@ const AddTask = ({ onTaskAdded }) => {
         </div>
         <div className="col-md-4">
           <label className="small fw-bold">Due Date</label>
-          <input 
-            type="date" className="form-control"
+          <input
+            type="date"
+            className="form-control"
             value={formData.dueDate}
-            onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
+            onChange={(e) =>
+              setFormData({ ...formData, dueDate: e.target.value })
+            }
           />
         </div>
       </div>
