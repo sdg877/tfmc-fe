@@ -13,6 +13,24 @@ const TaskItem = ({ task, setTasks }) => {
   const token = localStorage.getItem('token');
   const baseURL = import.meta.env.VITE_API_URL;
 
+  const getDisplayUrgency = () => {
+    if (!task.dueDate) return task.urgency;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); 
+    const due = new Date(task.dueDate);
+    due.setHours(0, 0, 0, 0);
+
+    const diffTime = due - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) return 'now';   
+    if (diffDays <= 3) return 'soon';  
+    return task.urgency;              
+  };
+
+  const displayUrgency = getDisplayUrgency();
+
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
@@ -81,9 +99,15 @@ const TaskItem = ({ task, setTasks }) => {
         <h6 className="mb-0">{task.title}</h6>
         <div className="d-flex flex-wrap gap-2 mt-1">
           <span className="badge bg-info text-dark small">Energy: {task.energyRequired}</span>
-          <span className={`badge small ${task.urgency === 'now' ? 'bg-danger' : 'bg-secondary'}`}>
-            {task.urgency}
+          
+          <span className={`badge small ${
+            displayUrgency === 'now' ? 'bg-danger' : 
+            displayUrgency === 'soon' ? 'bg-warning text-dark' : 
+            'bg-secondary'
+          }`}>
+            {displayUrgency}
           </span>
+
           {task.dueDate && (
             <small className="text-muted w-100">
               Due: {new Date(task.dueDate).toLocaleDateString('en-GB')}
