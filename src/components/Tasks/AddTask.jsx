@@ -4,7 +4,7 @@ import axios from "axios";
 const AddTask = ({ onTaskAdded }) => {
   const [formData, setFormData] = useState({
     title: "",
-    energyRequired: 3,
+    energyRequired: "3", // Changed to string to prevent the "0" bug
     urgency: "soon",
     dueDate: "",
   });
@@ -30,16 +30,23 @@ const AddTask = ({ onTaskAdded }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
+
+    // Prepare data: Convert energy back to a number for the database
+    const taskData = {
+      ...formData,
+      energyRequired: Number(formData.energyRequired) || 3, // Default to 3 if empty
+    };
+
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/tasks`,
-        formData,
+        taskData,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       onTaskAdded(res.data);
       setFormData({
         title: "",
-        energyRequired: 3,
+        energyRequired: "3",
         urgency: "soon",
         dueDate: "",
       });
@@ -72,7 +79,7 @@ const AddTask = ({ onTaskAdded }) => {
             onChange={(e) =>
               setFormData({
                 ...formData,
-                energyRequired: Number(e.target.value),
+                energyRequired: e.target.value, // Keep as string so you can delete it
               })
             }
           />
