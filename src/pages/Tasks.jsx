@@ -3,7 +3,6 @@ import axios from "axios";
 import AddTask from "../components/Tasks/AddTask";
 import TaskItem from "../components/Tasks/TaskItem";
 import EnergyProgress from "../components/Energy/EnergyProgress";
-import TaskCalendar from "../components/Tasks/taskCalendar";
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
@@ -38,14 +37,13 @@ const Tasks = () => {
     };
     fetchData();
   }, [baseURL, token]);
-
-  // --- THE MISSING LOGIC ---
+  
   const handleToggleComplete = async (id, isCompleted) => {
     try {
       const res = await axios.put(
         `${baseURL}/tasks/${id}`,
         { isCompleted: !isCompleted },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       setTasks(tasks.map((t) => (t._id === id ? res.data : t)));
     } catch (err) {
@@ -65,7 +63,6 @@ const Tasks = () => {
       }
     }
   };
-  // -------------------------
 
   const filteredTasks = tasks.filter((t) => {
     const categoryMatch = filter.category === "all" || t.category === filter.category;
@@ -73,7 +70,8 @@ const Tasks = () => {
     return categoryMatch && urgencyMatch;
   });
 
-  if (loading) return <div className="container mt-5 text-center">Loading...</div>;
+  if (loading)
+    return <div className="container mt-5 text-center">Loading...</div>;
 
   return (
     <div className="container mt-4" style={{ maxWidth: "1000px" }}>
@@ -81,47 +79,75 @@ const Tasks = () => {
 
       <ul className="nav nav-pills nav-fill mb-4 bg-light p-1 rounded-pill shadow-sm">
         <li className="nav-item">
-          <button className={`nav-link rounded-pill fw-bold ${activeTab === "today" ? "active bg-dark text-white" : "text-dark"}`} onClick={() => setActiveTab("today")}>Today</button>
+          <button
+            className={`nav-link rounded-pill fw-bold ${activeTab === "today" ? "active bg-dark text-white" : "text-dark"}`}
+            onClick={() => setActiveTab("today")}
+          >
+            Today
+          </button>
         </li>
         <li className="nav-item">
-          <button className={`nav-link rounded-pill fw-bold ${activeTab === "calendar" ? "active bg-dark text-white" : "text-dark"}`} onClick={() => setActiveTab("calendar")}>Calendar</button>
+          <button
+            className={`nav-link rounded-pill fw-bold ${activeTab === "all" ? "active bg-dark text-white" : "text-dark"}`}
+            onClick={() => setActiveTab("all")}
+          >
+            All Tasks
+          </button>
         </li>
         <li className="nav-item">
-          <button className={`nav-link rounded-pill fw-bold ${activeTab === "all" ? "active bg-dark text-white" : "text-dark"}`} onClick={() => setActiveTab("all")}>All Tasks</button>
-        </li>
-        <li className="nav-item">
-          <button className={`nav-link rounded-pill fw-bold ${activeTab === "add" ? "active bg-dark text-white" : "text-dark"}`} onClick={() => setActiveTab("add")}>+ Add Task</button>
+          <button
+            className={`nav-link rounded-pill fw-bold ${activeTab === "add" ? "active bg-dark text-white" : "text-dark"}`}
+            onClick={() => setActiveTab("add")}
+          >
+            + Add Task
+          </button>
         </li>
       </ul>
 
       {activeTab === "today" && (
         <div>
-          <EnergyProgress key={dailyLimit} tasks={tasks} dailyLimit={dailyLimit} />
+          <EnergyProgress
+            key={dailyLimit}
+            tasks={tasks}
+            dailyLimit={dailyLimit}
+          />
           <div className="list-group shadow-sm mt-3">
-            {tasks.filter(t => !t.isCompleted && (t.urgency === 'now' || t.isPlannedForToday)).map((t) => (
-              <TaskItem key={t._id} task={t} onToggle={handleToggleComplete} onDelete={handleDeleteTask} />
-            ))}
+            {tasks
+              .filter(
+                (t) => !t.isCompleted && (t.urgency === "now" || t.isPlannedForToday)
+              )
+              .map((t) => (
+                <TaskItem
+                  key={t._id}
+                  task={t}
+                  onToggle={handleToggleComplete}
+                  onDelete={handleDeleteTask}
+                  setTasks={setTasks}
+                />
+              ))}
           </div>
-        </div>
-      )}
-
-      {activeTab === "calendar" && (
-        <div className="bg-white p-3 rounded shadow-sm">
-          <TaskCalendar tasks={tasks} />
         </div>
       )}
 
       {activeTab === "all" && (
         <div>
           <div className="d-flex gap-2 mb-3">
-            <select className="form-select form-select-sm w-auto" value={filter.category} onChange={(e) => setFilter({...filter, category: e.target.value})}>
+            <select
+              className="form-select form-select-sm w-auto"
+              value={filter.category}
+              onChange={(e) => setFilter({ ...filter, category: e.target.value })}
+            >
               <option value="all">All Categories</option>
               <option value="admin">Admin</option>
               <option value="focus">Focus</option>
               <option value="physical">Physical</option>
               <option value="social">Social</option>
             </select>
-            <select className="form-select form-select-sm w-auto" value={filter.urgency} onChange={(e) => setFilter({...filter, urgency: e.target.value})}>
+            <select
+              className="form-select form-select-sm w-auto"
+              value={filter.urgency}
+              onChange={(e) => setFilter({ ...filter, urgency: e.target.value })}
+            >
               <option value="all">All Urgency</option>
               <option value="now">Now</option>
               <option value="soon">Soon</option>
@@ -130,7 +156,13 @@ const Tasks = () => {
           </div>
           <div className="list-group shadow-sm">
             {filteredTasks.map((t) => (
-              <TaskItem key={t._id} task={t} onToggle={handleToggleComplete} onDelete={handleDeleteTask} />
+              <TaskItem
+                key={t._id}
+                task={t}
+                onToggle={handleToggleComplete}
+                onDelete={handleDeleteTask}
+                setTasks={setTasks}
+              />
             ))}
           </div>
         </div>
@@ -138,10 +170,12 @@ const Tasks = () => {
 
       {activeTab === "add" && (
         <div className="card p-4 shadow-sm border-0 bg-light">
-          <AddTask onTaskAdded={(newTask) => { 
-            setTasks([newTask, ...tasks]); 
-            setActiveTab("today"); 
-          }} />
+          <AddTask
+            onTaskAdded={(newTask) => {
+              setTasks([newTask, ...tasks]);
+              setActiveTab("today");
+            }}
+          />
         </div>
       )}
     </div>
