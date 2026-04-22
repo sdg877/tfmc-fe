@@ -12,6 +12,7 @@ const Navbar = () => {
           <div className="d-flex align-items-center">
             <Link className="nav-link me-3" to="/profile">Profile</Link>
             <Link className="nav-link me-3" to="/tasks">Tasks</Link>
+            <Link className="nav-link me-3" to="/calendar">Calendar</Link>
             <Logout />
           </div>
         ) : (

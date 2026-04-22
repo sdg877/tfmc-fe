@@ -5,9 +5,10 @@ import "./App.css";
 import Navbar from "./components/Layout/Navbar";
 
 import Home from "./pages/Home";
-import AuthPage from "./pages/AuthPage";
+import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Tasks from "./pages/Tasks";
+import Calendar from "./pages/Calendar";
 
 function App() {
   return (
@@ -16,10 +17,11 @@ function App() {
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<AuthPage />} />
-          <Route path="/signup" element={<AuthPage />} />
+          <Route path="/login" element={<Auth />} />
+          <Route path="/signup" element={<Auth />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/calendar" element={<Calendar />} />
         </Routes>
       </main>
     </Router>
