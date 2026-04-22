@@ -4,7 +4,7 @@ import axios from "axios";
 const AddTask = ({ onTaskAdded }) => {
   const [formData, setFormData] = useState({
     title: "",
-    energyRequired: "3", // Changed to string to prevent the "0" bug
+    category: "admin",
     urgency: "soon",
     dueDate: "",
   });
@@ -23,6 +23,8 @@ const AddTask = ({ onTaskAdded }) => {
         setFormData((prev) => ({ ...prev, urgency: "now" }));
       } else if (diffDays <= 3) {
         setFormData((prev) => ({ ...prev, urgency: "soon" }));
+      } else {
+        setFormData((prev) => ({ ...prev, urgency: "later" }));
       }
     }
   }, [formData.dueDate]);
@@ -31,22 +33,16 @@ const AddTask = ({ onTaskAdded }) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
 
-    // Prepare data: Convert energy back to a number for the database
-    const taskData = {
-      ...formData,
-      energyRequired: Number(formData.energyRequired) || 3, // Default to 3 if empty
-    };
-
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/tasks`,
-        taskData,
+        formData,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       onTaskAdded(res.data);
       setFormData({
         title: "",
-        energyRequired: "3",
+        category: "admin",
         urgency: "soon",
         dueDate: "",
       });
@@ -69,20 +65,21 @@ const AddTask = ({ onTaskAdded }) => {
       </div>
       <div className="row g-2">
         <div className="col-md-4">
-          <label className="small fw-bold">Energy (1-5)</label>
-          <input
-            type="number"
-            min="1"
-            max="5"
-            className="form-control"
-            value={formData.energyRequired}
+          <label className="small fw-bold">Category (Brain Load)</label>
+          <select
+            className="form-select"
+            value={formData.category}
             onChange={(e) =>
-              setFormData({
-                ...formData,
-                energyRequired: e.target.value, // Keep as string so you can delete it
-              })
+              setFormData({ ...formData, category: e.target.value })
             }
-          />
+            required
+          >
+            <option value="admin">Quick Admin (Low)</option>
+            <option value="physical">Physical/Errands (Med)</option>
+            <option value="social">Social/Meetings (Med-High)</option>
+            <option value="focus">Deep Focus (High)</option>
+            <option value="stress">High Stress (Epic)</option>
+          </select>
         </div>
         <div className="col-md-4">
           <label className="small fw-bold">Urgency</label>
