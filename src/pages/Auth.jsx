@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AuthForm from '../components/Auth/AuthForm';
 
-const AuthPage = () => {
+const Auth = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isSignup = location.pathname === '/signup';
@@ -38,4 +38,4 @@ const AuthPage = () => {
   );
 };
 
-export default AuthPage;
+export default Auth;
