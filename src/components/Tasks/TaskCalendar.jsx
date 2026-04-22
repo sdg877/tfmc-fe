@@ -1,17 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 
 const TaskCalendar = ({ tasks }) => {
-  const today = new Date();
-  const daysInMonth = new Date(
-    today.getFullYear(),
-    today.getMonth() + 1,
-    0,
-  ).getDate();
-  const firstDayOfMonth = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    1,
-  ).getDay();
+  const [viewDate, setViewDate] = useState(new Date());
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+
+  const changeMonth = (offset) => {
+    setViewDate(new Date(year, month + offset, 1));
+  };
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfMonth = new Date(year, month, 1).getDay();
 
   const calendarDays = Array(firstDayOfMonth)
     .fill(null)
@@ -22,60 +22,85 @@ const TaskCalendar = ({ tasks }) => {
     return tasks.filter((t) => {
       if (!t.dueDate) return false;
       const d = new Date(t.dueDate);
-      return d.getDate() === day && d.getMonth() === today.getMonth();
+      return (
+        d.getDate() === day &&
+        d.getMonth() === month &&
+        d.getFullYear() === year
+      );
     });
   };
 
   return (
-    <div className="card p-3 shadow-sm mb-4">
-      <h5 className="text-center mb-3">
-        {today.toLocaleString("default", { month: "long" })}{" "}
-        {today.getFullYear()}
-      </h5>
+    <div className="card shadow-sm border-0">
+      <div className="d-flex justify-content-between align-items-center p-3 bg-white border-bottom">
+        <button
+          className="btn btn-outline-dark btn-sm rounded-pill px-3"
+          onClick={() => changeMonth(-1)}
+        >
+          ← Previous
+        </button>
+        <h4
+          className="fw-bold mb-0 text-uppercase"
+          style={{ letterSpacing: "1px" }}
+        >
+          {viewDate.toLocaleString("default", { month: "long" })} {year}
+        </h4>
+        <button
+          className="btn btn-outline-dark btn-sm rounded-pill px-3"
+          onClick={() => changeMonth(1)}
+        >
+          Next →
+        </button>
+      </div>
+
+      {/* Grid Layout */}
       <div
-        className="d-grid shadow-sm border rounded"
+        className="d-grid"
         style={{
           gridTemplateColumns: "repeat(7, 1fr)",
-          backgroundColor: "#fff",
+          backgroundColor: "#dee2e6",
+          gap: "1px",
         }}
       >
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
           <div
             key={d}
-            className="text-center fw-bold p-2 border-bottom bg-light small"
+            className="bg-light text-center py-2 fw-bold small text-muted border-bottom"
           >
             {d}
           </div>
         ))}
+
         {calendarDays.map((day, idx) => {
           const dayTasks = getTasksForDay(day);
           return (
             <div
               key={idx}
-              className="border-end border-bottom p-1"
-              style={{ minHeight: "80px", position: "relative" }}
+              className="bg-white p-1"
+              style={{ minHeight: "110px" }}
             >
-              <span className="small text-muted">{day}</span>
-              <div className="d-flex flex-column gap-1">
-                {dayTasks.slice(0, 2).map((t) => (
-                  <div
-                    key={t._id}
-                    className={`badge truncate small ${t.urgency === "now" ? "bg-danger" : "bg-primary"}`}
-                    style={{
-                      fontSize: "0.65rem",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {t.title}
+              {day && (
+                <>
+                  <div className="text-end pe-1">
+                    <span
+                      className={`small fw-bold ${new Date().getDate() === day && new Date().getMonth() === month ? "text-primary" : "text-muted"}`}
+                    >
+                      {day}
+                    </span>
                   </div>
-                ))}
-                {dayTasks.length > 2 && (
-                  <small className="text-muted" style={{ fontSize: "0.6rem" }}>
-                    +{dayTasks.length - 2} more
-                  </small>
-                )}
-              </div>
+                  <div className="d-flex flex-column gap-1 mt-1">
+                    {dayTasks.map((t) => (
+                      <div
+                        key={t._id}
+                        className={`badge ${t.urgency === "now" ? "bg-danger" : "bg-primary"} text-wrap text-start`}
+                        style={{ fontSize: "0.6rem", padding: "4px" }}
+                      >
+                        {t.title}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           );
         })}
