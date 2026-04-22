@@ -4,7 +4,7 @@ import axios from "axios";
 const AddTask = ({ onTaskAdded }) => {
   const [formData, setFormData] = useState({
     title: "",
-    category: "admin",
+    category: "",
     urgency: "soon",
     dueDate: "",
   });
@@ -40,9 +40,10 @@ const AddTask = ({ onTaskAdded }) => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       onTaskAdded(res.data);
+
       setFormData({
         title: "",
-        category: "admin",
+        category: "",
         urgency: "soon",
         dueDate: "",
       });
@@ -52,28 +53,37 @@ const AddTask = ({ onTaskAdded }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="card p-3 mb-4 shadow-sm">
-      <div className="mb-2">
-        <label className="small fw-bold">Task Title</label>
+    <form
+      onSubmit={handleSubmit}
+      className="card p-3 mb-4 shadow-sm border-0 bg-white"
+    >
+      <div className="mb-3">
+        <label className="small fw-bold text-muted">Task Title</label>
         <input
-          className="form-control"
+          className="form-control border-0 bg-light"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           placeholder="What needs doing?"
           required
         />
       </div>
+
       <div className="row g-2">
         <div className="col-md-4">
-          <label className="small fw-bold">Category (Brain Load)</label>
+          <label className="small fw-bold text-muted">
+            Category (Brain Load)
+          </label>
           <select
-            className="form-select"
+            className="form-select border-0 bg-light"
             value={formData.category}
             onChange={(e) =>
               setFormData({ ...formData, category: e.target.value })
             }
             required
           >
+            <option value="" disabled>
+              Select category...
+            </option>
             <option value="admin">Quick Admin (Low)</option>
             <option value="physical">Physical/Errands (Med)</option>
             <option value="social">Social/Meetings (Med-High)</option>
@@ -81,25 +91,27 @@ const AddTask = ({ onTaskAdded }) => {
             <option value="stress">High Stress (Epic)</option>
           </select>
         </div>
+
         <div className="col-md-4">
-          <label className="small fw-bold">Urgency</label>
+          <label className="small fw-bold text-muted">Urgency</label>
           <select
-            className="form-select"
+            className="form-select border-0 bg-light"
             value={formData.urgency}
             onChange={(e) =>
               setFormData({ ...formData, urgency: e.target.value })
             }
           >
-            <option value="later">later</option>
-            <option value="soon">soon</option>
-            <option value="now">now</option>
+            <option value="later">Later</option>
+            <option value="soon">Soon</option>
+            <option value="now">Now</option>
           </select>
         </div>
+
         <div className="col-md-4">
-          <label className="small fw-bold">Due Date</label>
+          <label className="small fw-bold text-muted">Due Date</label>
           <input
             type="date"
-            className="form-control"
+            className="form-control border-0 bg-light"
             value={formData.dueDate}
             onChange={(e) =>
               setFormData({ ...formData, dueDate: e.target.value })
@@ -107,7 +119,10 @@ const AddTask = ({ onTaskAdded }) => {
           />
         </div>
       </div>
-      <button className="btn btn-primary w-100 mt-3">Add Task</button>
+
+      <button className="btn btn-dark w-100 mt-4 py-2 rounded-pill shadow-sm">
+        Add Task
+      </button>
     </form>
   );
 };
