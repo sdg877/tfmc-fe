@@ -1,6 +1,39 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+const categoryStyles = {
+  admin: {
+    backgroundColor: "#f3e5f5",
+    color: "#7b1fa2",
+    border: "1px solid #ce93d8",
+  },
+  physical: {
+    backgroundColor: "#e8f5e9",
+    color: "#2e7d32",
+    border: "1px solid #a5d6a7",
+  },
+  social: {
+    backgroundColor: "#e3f2fd",
+    color: "#1565c0",
+    border: "1px solid #90caf9",
+  },
+  focus: {
+    backgroundColor: "#fff3e0",
+    color: "#e65100",
+    border: "1px solid #ffcc80",
+  },
+  stress: {
+    backgroundColor: "#fce4ec",
+    color: "#c2185b",
+    border: "1px solid #f48fb1",
+  },
+  default: {
+    backgroundColor: "#f5f5f5",
+    color: "#757575",
+    border: "1px solid #e0e0e0",
+  },
+};
+
 const TaskItem = ({ task, setTasks }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -15,15 +48,12 @@ const TaskItem = ({ task, setTasks }) => {
 
   const getCalculatedUrgency = (targetDate, manualUrgency) => {
     if (!targetDate) return manualUrgency;
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const due = new Date(targetDate);
     due.setHours(0, 0, 0, 0);
-
     const diffTime = due - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
     if (diffDays <= 0) return "now";
     if (diffDays <= 3) return "soon";
     return manualUrgency;
@@ -66,13 +96,15 @@ const TaskItem = ({ task, setTasks }) => {
   };
 
   const deleteTask = async () => {
-    try {
-      await axios.delete(`${baseURL}/tasks/${task._id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setTasks((prev) => prev.filter((t) => t._id !== task._id));
-    } catch (err) {
-      console.error(err);
+    if (window.confirm("Delete this task?")) {
+      try {
+        await axios.delete(`${baseURL}/tasks/${task._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setTasks((prev) => prev.filter((t) => t._id !== task._id));
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 
@@ -100,7 +132,7 @@ const TaskItem = ({ task, setTasks }) => {
                   : "bg-secondary"
             }`}
           >
-            Urgency: {previewUrgency}
+            {previewUrgency}
           </span>
         </div>
 
@@ -152,7 +184,7 @@ const TaskItem = ({ task, setTasks }) => {
             type="submit"
             className="btn btn-success btn-sm flex-grow-1 fw-bold"
           >
-            Save Changes
+            Save
           </button>
           <button
             type="button"
@@ -186,7 +218,11 @@ const TaskItem = ({ task, setTasks }) => {
             {task.title}
           </h6>
           <div className="d-flex flex-wrap gap-2 mt-1">
-            <span className="badge bg-info text-dark small text-capitalize">
+            {/* APPLYING THE PASTEL STYLE HERE */}
+            <span
+              className="badge small text-capitalize"
+              style={categoryStyles[task.category] || categoryStyles.default}
+            >
               {task.category || "admin"}
             </span>
 
