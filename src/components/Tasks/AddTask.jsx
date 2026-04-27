@@ -1,13 +1,23 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const AddTask = ({ onTaskAdded }) => {
+const AddTask = ({ onTaskAdded, showEnergyBar }) => {
   const [formData, setFormData] = useState({
     title: "",
     category: "",
     urgency: "soon",
     dueDate: "",
+    energyPoints: 0,
   });
+
+  const categoryWeights = {
+    quickwin: 5,
+    admin: 10,
+    physical: 20,
+    social: 30,
+    focus: 40,
+    stress: 45,
+  };
 
   useEffect(() => {
     if (formData.dueDate) {
@@ -33,10 +43,15 @@ const AddTask = ({ onTaskAdded }) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
 
+    const finalData = {
+      ...formData,
+      energyPoints: categoryWeights[formData.category] || 10,
+    };
+
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/tasks`,
-        formData,
+        finalData,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       onTaskAdded(res.data);
@@ -46,6 +61,7 @@ const AddTask = ({ onTaskAdded }) => {
         category: "",
         urgency: "soon",
         dueDate: "",
+        energyPoints: 0,
       });
     } catch (err) {
       alert(err.response?.data?.message || "Check your input");
@@ -53,28 +69,27 @@ const AddTask = ({ onTaskAdded }) => {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="card p-3 mb-4 shadow-sm border-0 bg-white"
-    >
-      <div className="mb-3">
-        <label className="small fw-bold text-muted">Task Title</label>
+    <form onSubmit={handleSubmit} className="p-2 bg-white">
+      <div className="mb-4">
+        <label className="small fw-bold text-muted text-uppercase ls-wide mb-2 d-block">
+          Task Description
+        </label>
         <input
-          className="form-control border-0 bg-light"
+          className="form-control form-control-lg border-0 bg-light rounded-3 shadow-none"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          placeholder="What needs doing?"
+          placeholder="What are we doing?"
           required
         />
       </div>
 
-      <div className="row g-2">
-        <div className="col-md-4">
-          <label className="small fw-bold text-muted">
-            Category (Brain Load)
+      <div className="row g-3">
+        <div className="col-md-6">
+          <label className="small fw-bold text-muted text-uppercase ls-wide mb-2 d-block">
+            Category
           </label>
           <select
-            className="form-select border-0 bg-light"
+            className="form-select border-0 bg-light py-2 shadow-none"
             value={formData.category}
             onChange={(e) =>
               setFormData({ ...formData, category: e.target.value })
@@ -82,20 +97,23 @@ const AddTask = ({ onTaskAdded }) => {
             required
           >
             <option value="" disabled>
-              Select category...
+              Select intensity...
             </option>
-            <option value="admin">Quick Admin (Low)</option>
-            <option value="physical">Physical/Errands (Med)</option>
-            <option value="social">Social/Meetings (Med-High)</option>
-            <option value="focus">Deep Focus (High)</option>
-            <option value="stress">High Stress (Epic)</option>
+            <option value="quickwin">Quick Win (5 pts)</option>
+            <option value="admin">Admin / Emails (10 pts)</option>
+            <option value="physical">Physical / Errands (20 pts)</option>
+            <option value="social">Social / Meetings (30 pts)</option>
+            <option value="focus">Deep Focus (40 pts)</option>
+            <option value="stress">High Stress (45 pts)</option>
           </select>
         </div>
 
-        <div className="col-md-4">
-          <label className="small fw-bold text-muted">Urgency</label>
+        <div className="col-md-3">
+          <label className="small fw-bold text-muted text-uppercase ls-wide mb-2 d-block">
+            Urgency
+          </label>
           <select
-            className="form-select border-0 bg-light"
+            className="form-select border-0 bg-light py-2 shadow-none"
             value={formData.urgency}
             onChange={(e) =>
               setFormData({ ...formData, urgency: e.target.value })
@@ -107,11 +125,13 @@ const AddTask = ({ onTaskAdded }) => {
           </select>
         </div>
 
-        <div className="col-md-4">
-          <label className="small fw-bold text-muted">Due Date</label>
+        <div className="col-md-3">
+          <label className="small fw-bold text-muted text-uppercase ls-wide mb-2 d-block">
+            Due Date
+          </label>
           <input
             type="date"
-            className="form-control border-0 bg-light"
+            className="form-control border-0 bg-light py-2 shadow-none"
             value={formData.dueDate}
             onChange={(e) =>
               setFormData({ ...formData, dueDate: e.target.value })
@@ -120,9 +140,11 @@ const AddTask = ({ onTaskAdded }) => {
         </div>
       </div>
 
-      <button className="btn btn-dark w-100 mt-4 py-2 rounded-pill shadow-sm">
-        Add Task
-      </button>
+      <div className="mt-4 pt-2 border-top">
+        <button className="btn btn-dark w-100 py-3 rounded-pill fw-bold">
+          Create Task
+        </button>
+      </div>
     </form>
   );
 };

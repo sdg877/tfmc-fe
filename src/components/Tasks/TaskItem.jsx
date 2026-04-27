@@ -34,13 +34,15 @@ const categoryStyles = {
   },
 };
 
-const TaskItem = ({ task, setTasks }) => {
+// Added showEnergyBar to props
+const TaskItem = ({ task, setTasks, showEnergyBar }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     title: task.title,
     category: task.category || "admin",
     urgency: task.urgency,
     dueDate: task.dueDate ? task.dueDate.split("T")[0] : "",
+    energyPoints: task.energyPoints || 1,
   });
 
   const token = localStorage.getItem("token");
@@ -124,13 +126,7 @@ const TaskItem = ({ task, setTasks }) => {
             required
           />
           <span
-            className={`badge ${
-              previewUrgency === "now"
-                ? "bg-danger"
-                : previewUrgency === "soon"
-                  ? "bg-warning text-dark"
-                  : "bg-secondary"
-            }`}
+            className={`badge ${previewUrgency === "now" ? "bg-danger" : previewUrgency === "soon" ? "bg-warning text-dark" : "bg-secondary"}`}
           >
             {previewUrgency}
           </span>
@@ -153,32 +149,86 @@ const TaskItem = ({ task, setTasks }) => {
               <option value="stress">Stress</option>
             </select>
           </div>
+
           <div className="col-4">
-            <label className="small fw-bold d-block">Urgency</label>
-            <select
-              className="form-select form-select-sm"
-              value={editData.urgency}
-              onChange={(e) =>
-                setEditData({ ...editData, urgency: e.target.value })
-              }
-            >
-              <option value="later">later</option>
-              <option value="soon">soon</option>
-              <option value="now">now</option>
-            </select>
+            <label className="small fw-bold d-block">
+              {showEnergyBar ? "Energy (1-5)" : "Urgency"}
+            </label>
+            {showEnergyBar ? (
+              <select
+                className="form-select form-select-sm"
+                value={editData.energyPoints}
+                onChange={(e) =>
+                  setEditData({
+                    ...editData,
+                    energyPoints: Number(e.target.value),
+                  })
+                }
+              >
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <select
+                className="form-select form-select-sm"
+                value={editData.urgency}
+                onChange={(e) =>
+                  setEditData({ ...editData, urgency: e.target.value })
+                }
+              >
+                <option value="later">later</option>
+                <option value="soon">soon</option>
+                <option value="now">now</option>
+              </select>
+            )}
           </div>
+
           <div className="col-4">
-            <label className="small fw-bold d-block">Due Date</label>
-            <input
-              type="date"
-              className="form-control form-select-sm"
-              value={editData.dueDate}
-              onChange={(e) =>
-                setEditData({ ...editData, dueDate: e.target.value })
-              }
-            />
+            <label className="small fw-bold d-block">
+              {showEnergyBar ? "Urgency" : "Due Date"}
+            </label>
+            {showEnergyBar ? (
+              <select
+                className="form-select form-select-sm"
+                value={editData.urgency}
+                onChange={(e) =>
+                  setEditData({ ...editData, urgency: e.target.value })
+                }
+              >
+                <option value="later">later</option>
+                <option value="soon">soon</option>
+                <option value="now">now</option>
+              </select>
+            ) : (
+              <input
+                type="date"
+                className="form-control form-select-sm"
+                value={editData.dueDate}
+                onChange={(e) =>
+                  setEditData({ ...editData, dueDate: e.target.value })
+                }
+              />
+            )}
           </div>
+
+          {showEnergyBar && (
+            <div className="col-12 mt-2">
+              <label className="small fw-bold d-block">Due Date</label>
+              <input
+                type="date"
+                className="form-control form-select-sm"
+                value={editData.dueDate}
+                onChange={(e) =>
+                  setEditData({ ...editData, dueDate: e.target.value })
+                }
+              />
+            </div>
+          )}
         </div>
+
         <div className="d-flex gap-2">
           <button
             type="submit"
@@ -218,7 +268,6 @@ const TaskItem = ({ task, setTasks }) => {
             {task.title}
           </h6>
           <div className="d-flex flex-wrap gap-2 mt-1">
-            {/* APPLYING THE PASTEL STYLE HERE */}
             <span
               className="badge small text-capitalize"
               style={categoryStyles[task.category] || categoryStyles.default}
@@ -226,14 +275,14 @@ const TaskItem = ({ task, setTasks }) => {
               {task.category || "admin"}
             </span>
 
+            {showEnergyBar && (
+              <span className="badge border text-dark bg-light small">
+                ⚡ {task.energyPoints || 1}
+              </span>
+            )}
+
             <span
-              className={`badge small ${
-                displayUrgency === "now"
-                  ? "bg-danger"
-                  : displayUrgency === "soon"
-                    ? "bg-warning text-dark"
-                    : "bg-secondary"
-              }`}
+              className={`badge small ${displayUrgency === "now" ? "bg-danger" : displayUrgency === "soon" ? "bg-warning text-dark" : "bg-secondary"}`}
             >
               {displayUrgency}
             </span>
