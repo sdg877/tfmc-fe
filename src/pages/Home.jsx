@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import HeatMapGrid from "../components/HeatMap/HeatMapGrid";
 
 const Home = () => {
   const [tasks, setTasks] = useState([]);
   const [userName, setUserName] = useState("");
+  const [joinDate, setJoinDate] = useState(null);
+  const [heatmapData, setHeatmapData] = useState({});
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
 
@@ -16,24 +19,55 @@ const Home = () => {
     if (token) {
       const fetchData = async () => {
         try {
-          const resTasks = await axios.get(
-            `${import.meta.env.VITE_API_URL}/tasks`,
-            {
+          const baseURL = import.meta.env.VITE_API_URL;
+          const [resTasks, resUser] = await Promise.all([
+            axios.get(`${baseURL}/tasks`, {
               headers: { Authorization: `Bearer ${token}` },
-            },
-          );
+            }),
+            axios.get(`${baseURL}/users/profile`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
+
           setTasks(resTasks.data);
-
-          // Fetch user profile to get their real name
-          const resUser = await axios.get(
-            `${import.meta.env.VITE_API_URL}/users/profile`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
-
           setUserName(resUser.data.name || "");
+          setJoinDate(resUser.data.createdAt);
 
+          // Process Heatmap Logic
+          const weights = {
+            quickwin: 5,
+            admin: 10,
+            physical: 20,
+            social: 30,
+            focus: 40,
+            stress: 45,
+          };
+          const dayStats = {};
+
+          resTasks.data.forEach((task) => {
+            if (task.isCompleted && task.updatedAt) {
+              const date = new Date(task.updatedAt).toISOString().split("T")[0];
+              const energy = weights[task.category] || 10;
+
+              if (!dayStats[date]) {
+                dayStats[date] = { totalEnergy: 0, count: 0 };
+              }
+              dayStats[date].totalEnergy += energy;
+              dayStats[date].count += 1;
+            }
+          });
+
+          const finalizedMap = {};
+          Object.keys(dayStats).forEach((date) => {
+            const { totalEnergy, count } = dayStats[date];
+            let level = 1;
+            if (totalEnergy > 90) level = 4;
+            else if (totalEnergy > 60) level = 3;
+            else if (totalEnergy > 30) level = 2;
+            finalizedMap[date] = { level, count };
+          });
+
+          setHeatmapData(finalizedMap);
           setLoading(false);
         } catch (err) {
           console.error("Fetch error", err);
@@ -58,14 +92,6 @@ const Home = () => {
         (t.dueDate &&
           new Date(t.dueDate).toLocaleDateString("en-GB") === todayStr)),
   );
-
-  const upcomingWeek = tasks.filter((t) => {
-    if (t.isCompleted) return false;
-    const dueDate = new Date(t.dueDate);
-    const nextWeek = new Date();
-    nextWeek.setDate(nextWeek.getDate() + 7);
-    return dueDate > new Date() && dueDate <= nextWeek;
-  });
 
   if (!token) {
     return (
@@ -95,6 +121,13 @@ const Home = () => {
     );
   }
 
+  if (loading)
+    return (
+      <div className="container py-5 text-center">
+        Loading your dashboard...
+      </div>
+    );
+
   return (
     <div className="container mt-5">
       <header className="mb-5 text-center">
@@ -106,6 +139,17 @@ const Home = () => {
           Your daily energy overview
         </p>
       </header>
+
+      <div className="row mb-5">
+        <div className="col-12 text-decoration-none">
+          <Link
+            to="/progress"
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            <HeatMapGrid data={heatmapData} joinDate={joinDate} />
+          </Link>
+        </div>
+      </div>
 
       <div className="row g-4">
         <div className="col-md-4">

@@ -21,12 +21,6 @@ const Navbar = () => {
               </Link>
             )}
 
-            {location.pathname !== "/progress" && (
-              <Link className="nav-link me-3" to="/progress">
-                Progress
-              </Link>
-            )}
-
             {location.pathname !== "/calendar" && (
               <Link className="nav-link me-3" to="/calendar">
                 Calendar
