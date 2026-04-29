@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import AddTask from "../components/Tasks/AddTask";
 import TaskItem from "../components/Tasks/TaskItem";
@@ -21,7 +21,7 @@ const Tasks = () => {
   const baseURL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
 
-  const calculateLoad = (taskList, limit) => {
+  const calculateLoad = (taskList = [], limit = 100) => {
     const today = new Date().toLocaleDateString("en-GB");
     const weights = {
       quickwin: 5,
@@ -45,10 +45,11 @@ const Tasks = () => {
       })
       .reduce((total, t) => total + (weights[t.category] || 10), 0);
 
-    const removedUnits = 100 - limit;
+    const removedUnits = 100 - (limit || 100);
     return taskUnits + removedUnits;
   };
 
+  // 1. Fetch Initial Data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -74,6 +75,13 @@ const Tasks = () => {
     fetchData();
   }, [baseURL, token]);
 
+  useEffect(() => {
+    if (showEnergyBar) {
+      const newLoad = calculateLoad(tasks, dailyLimit);
+      setCurrentLoad(newLoad);
+    }
+  }, [tasks, dailyLimit, showEnergyBar]);
+
   const isRecent = (task) => {
     if (!task.isCompleted) return true;
     const completedAt = new Date(task.updatedAt);
@@ -85,10 +93,8 @@ const Tasks = () => {
     const updatedTasks = [newTask, ...tasks];
     setTasks(updatedTasks);
 
-    const newLoad = calculateLoad(updatedTasks, dailyLimit);
-    setCurrentLoad(newLoad);
-
     if (showEnergyBar) {
+      const newLoad = calculateLoad(updatedTasks, dailyLimit);
       let reachedLevel = 0;
       if (newLoad >= 100) reachedLevel = 100;
       else if (newLoad >= 90) reachedLevel = 90;
@@ -148,7 +154,9 @@ const Tasks = () => {
         {["today", "all", "add"].map((tab) => (
           <li className="nav-item" key={tab}>
             <button
-              className={`nav-link rounded-pill fw-bold ${activeTab === tab ? "active bg-dark text-white" : "text-dark"}`}
+              className={`nav-link rounded-pill fw-bold ${
+                activeTab === tab ? "active bg-dark text-white" : "text-dark"
+              }`}
               onClick={() => setActiveTab(tab)}
             >
               {tab === "add"
