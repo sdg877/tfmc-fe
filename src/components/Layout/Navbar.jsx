@@ -15,21 +15,27 @@ const Navbar = () => {
       <div className="navbar-nav ms-auto">
         {token ? (
           <div className="d-flex align-items-center">
-            {location.pathname !== "/profile" && (
-              <Link className="nav-link me-3" to="/profile">
-                Profile
-              </Link>
-            )}
-
             {location.pathname !== "/tasks" && (
               <Link className="nav-link me-3" to="/tasks">
                 Tasks
               </Link>
             )}
 
+            {location.pathname !== "/heatmap" && (
+              <Link className="nav-link me-3" to="/heatmap">
+                Patterns
+              </Link>
+            )}
+
             {location.pathname !== "/calendar" && (
               <Link className="nav-link me-3" to="/calendar">
                 Calendar
+              </Link>
+            )}
+
+            {location.pathname !== "/profile" && (
+              <Link className="nav-link me-3" to="/profile">
+                Profile
               </Link>
             )}
 
