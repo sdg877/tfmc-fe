@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import AddTask from "../components/Tasks/AddTask";
 import TaskItem from "../components/Tasks/TaskItem";
@@ -34,14 +34,17 @@ const Tasks = () => {
 
     const taskUnits = taskList
       .filter((t) => {
-        const isPlannedToday = t.isPlannedForToday || t.urgency === "now";
+        // ONLY count towards daily battery if:
+        const isNow = t.urgency === "now";
+        const isPlanned = t.isPlannedForToday === true;
         const isDueToday =
           t.dueDate &&
           new Date(t.dueDate).toLocaleDateString("en-GB") === today;
         const completedToday =
           t.isCompleted &&
           new Date(t.updatedAt).toLocaleDateString("en-GB") === today;
-        return isPlannedToday || isDueToday || completedToday;
+
+        return isNow || isPlanned || isDueToday || completedToday;
       })
       .reduce((total, t) => total + (weights[t.category] || 10), 0);
 
@@ -49,7 +52,6 @@ const Tasks = () => {
     return taskUnits + removedUnits;
   };
 
-  // 1. Fetch Initial Data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -95,6 +97,8 @@ const Tasks = () => {
 
     if (showEnergyBar) {
       const newLoad = calculateLoad(updatedTasks, dailyLimit);
+      setCurrentLoad(newLoad);
+
       let reachedLevel = 0;
       if (newLoad >= 100) reachedLevel = 100;
       else if (newLoad >= 90) reachedLevel = 90;
