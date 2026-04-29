@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import HeatMapGrid from "../components/HeatMap/HeatMapGrid";
 
-const HeatMap = () => {
+const Progress = () => {
   const [heatmapData, setHeatmapData] = useState({});
   const [joinDate, setJoinDate] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -97,4 +97,4 @@ const HeatMap = () => {
   );
 };
 
-export default HeatMap;
+export default Progress;
