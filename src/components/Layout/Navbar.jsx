@@ -3,7 +3,9 @@ import Logout from "./Logout";
 
 const Navbar = () => {
   const token = localStorage.getItem("token");
-  const location = useLocation(); 
+  const location = useLocation();
+
+  const isHomePage = location.pathname === "/";
 
   return (
     <nav className="navbar navbar-dark bg-dark px-4 shadow-sm">
@@ -34,7 +36,8 @@ const Navbar = () => {
             <Logout />
           </div>
         ) : (
-          location.pathname !== "/login" && (
+          location.pathname !== "/login" &&
+          !isHomePage && (
             <Link className="nav-link" to="/login">
               Login
             </Link>
