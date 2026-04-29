@@ -9,7 +9,7 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Tasks from "./pages/Tasks";
 import Calendar from "./pages/Calendar";
-import HeatMap from "./pages/HeatMap";
+import Progress from "./pages/Progress";
 
 function App() {
   return (
@@ -23,7 +23,7 @@ function App() {
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/calendar" element={<Calendar />} />
-          <Route path="/progress" element={<HeatMap />} />
+          <Route path="/progress" element={<Progress />} />
         </Routes>
       </main>
     </Router>
