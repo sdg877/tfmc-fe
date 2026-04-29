@@ -21,9 +21,9 @@ const Navbar = () => {
               </Link>
             )}
 
-            {location.pathname !== "/heatmap" && (
-              <Link className="nav-link me-3" to="/heatmap">
-                Patterns
+            {location.pathname !== "/progress" && (
+              <Link className="nav-link me-3" to="/progress">
+                Progress
               </Link>
             )}
 
