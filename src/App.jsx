@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Tasks from "./pages/Tasks";
 import Calendar from "./pages/Calendar";
+import HeatMap from "./pages/HeatMap";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/calendar" element={<Calendar />} />
+          <Route path="/progress" element={<HeatMap />} />
         </Routes>
       </main>
     </Router>
