@@ -1,6 +1,6 @@
 import React from "react";
 
-const HeatMapGrid = ({ data }) => {
+const HeatMapGrid = ({ data, joinDate }) => {
   const getLevelColor = (level) => {
     switch (level) {
       case 4:
@@ -16,44 +16,59 @@ const HeatMapGrid = ({ data }) => {
     }
   };
 
-  const days = Array.from({ length: 30 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (29 - i));
-    return d.toISOString().split("T")[0];
-  });
+  const generateDays = () => {
+    const start = new Date(joinDate);
+    const today = new Date();
+    const days = [];
+
+    const diffTime = Math.abs(today - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    const daysToShow = Math.max(diffDays, 1);
+    const windowSize = Math.min(daysToShow, 30);
+
+    for (let i = 0; i < windowSize; i++) {
+      const d = new Date();
+      d.setDate(today.getDate() - (windowSize - 1 - i));
+      days.push(d.toISOString().split("T")[0]);
+    }
+    return days;
+  };
+
+  const activeDays = generateDays();
 
   return (
     <div className="card shadow-sm border-0 rounded-4 p-4">
-      <h5 className="fw-bold mb-3 text-dark">Last 30 Days</h5>
-      <div className="d-flex flex-wrap gap-2">
-        {days.map((date) => {
+      <h5 className="fw-bold mb-3 text-dark">Activity Tracking</h5>
+
+      <div
+        className="d-flex flex-nowrap gap-2 overflow-x-auto pb-2"
+        style={{ scrollbarWidth: "thin" }}
+      >
+        {activeDays.map((date) => {
           const dayData = data[date] || { level: 0, count: 0 };
           return (
             <div
               key={date}
-              className="rounded-2 border"
+              className="rounded-2 border flex-shrink-0"
               style={{
                 width: "35px",
                 height: "35px",
                 backgroundColor: getLevelColor(dayData.level),
                 borderColor: "#eee !important",
-                transition: "transform 0.2s",
               }}
-              // Hover text logic
               title={
                 dayData.count > 0
                   ? `${date}: ${dayData.count} tasks completed`
-                  : `${date}: No activity`
+                  : `${date}: No tasks completed`
               }
-              onMouseOver={(e) => (e.target.style.transform = "scale(1.1)")}
-              onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
             />
           );
         })}
       </div>
 
       <div className="mt-4 d-flex gap-3 align-items-center justify-content-center">
-        <small className="text-muted">Quiet</small>
+        <small className="text-muted small fw-bold">LOW</small>
         <div className="d-flex gap-1">
           {[1, 2, 3, 4].map((l) => (
             <div
@@ -67,7 +82,7 @@ const HeatMapGrid = ({ data }) => {
             />
           ))}
         </div>
-        <small className="text-muted">Busy</small>
+        <small className="text-muted small fw-bold">HIGH</small>
       </div>
     </div>
   );
