@@ -33,7 +33,6 @@ const Home = () => {
           setUserName(resUser.data.name || "");
           setJoinDate(resUser.data.createdAt);
 
-          // Process Heatmap Logic
           const weights = {
             quickwin: 5,
             admin: 10,
@@ -140,17 +139,6 @@ const Home = () => {
         </p>
       </header>
 
-      <div className="row mb-5">
-        <div className="col-12 text-decoration-none">
-          <Link
-            to="/progress"
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            <HeatMapGrid data={heatmapData} joinDate={joinDate} />
-          </Link>
-        </div>
-      </div>
-
       <div className="row g-4">
         <div className="col-md-4">
           <div className="card border-0 shadow-sm rounded-4 bg-dark text-white p-4 h-100">
@@ -215,6 +203,15 @@ const Home = () => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+        <div className="row justify-content-center mt-5 mb-5">
+          <div className="col-12 col-md-6 col-lg-4">
+            <HeatMapGrid
+              data={heatmapData}
+              joinDate={joinDate}
+              daysToView={28}
+            />
           </div>
         </div>
       </div>
