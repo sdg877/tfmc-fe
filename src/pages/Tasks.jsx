@@ -10,7 +10,10 @@ const Tasks = () => {
   const [dailyLimit, setDailyLimit] = useState(100);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("today");
-  const [filter, setFilter] = useState({ category: "all", urgency: "all" });
+  const [filter, setFilter] = useState({
+    category: "all",
+    hideNonUrgent: false,
+  });
   const [showEnergyBar, setShowEnergyBar] = useState(true);
 
   const [showCompleted, setShowCompleted] = useState(false);
@@ -21,10 +24,11 @@ const Tasks = () => {
   const baseURL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
 
-  const calculateLoad = (taskList = [], limit = 100) => {
+  const calculateLoad = (taskList = []) => {
+    if (!taskList || taskList.length === 0) return 0;
+
     const today = new Date().toLocaleDateString("en-GB");
     const weights = {
-      quickwin: 5,
       admin: 10,
       physical: 20,
       social: 30,
@@ -32,25 +36,30 @@ const Tasks = () => {
       stress: 45,
     };
 
-    const taskUnits = taskList
-      .filter((t) => {
-        // ONLY count towards daily battery if:
-        const isNow = t.urgency === "now";
-        const isPlanned = t.isPlannedForToday === true;
-        const isDueToday =
-          t.dueDate &&
-          new Date(t.dueDate).toLocaleDateString("en-GB") === today;
-        const completedToday =
-          t.isCompleted &&
-          new Date(t.updatedAt).toLocaleDateString("en-GB") === today;
+    const todaysTasks = taskList.filter((t) => {
+      const isPlanned = t.isPlannedForToday === true;
+      const isDueToday =
+        t.dueDate && new Date(t.dueDate).toLocaleDateString("en-GB") === today;
+      const completedToday =
+        t.isCompleted &&
+        t.updatedAt &&
+        new Date(t.updatedAt).toLocaleDateString("en-GB") === today;
 
-        return isNow || isPlanned || isDueToday || completedToday;
-      })
-      .reduce((total, t) => total + (weights[t.category] || 10), 0);
+      return isPlanned || isDueToday || completedToday;
+    });
 
-    const removedUnits = 100 - (limit || 100);
-    return taskUnits + removedUnits;
+    if (todaysTasks.length === 0) return 0;
+
+    return todaysTasks.reduce(
+      (total, t) => total + (weights[t.category] || 10),
+      0,
+    );
   };
+
+  useEffect(() => {
+    const newLoad = calculateLoad(tasks);
+    setCurrentLoad(newLoad);
+  }, [tasks]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -138,19 +147,20 @@ const Tasks = () => {
     }
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="container mt-5 text-center text-muted py-5">
         Loading workspace...
       </div>
     );
+  }
 
   return (
     <div className="container py-4" style={{ maxWidth: "1000px" }}>
       <header className="mb-4">
-        <h2 className="fw-bold text-dark mb-1">Task Manager</h2>
+        <h2 className="fw-bold text-dark mb-1">The Fast Minds Club</h2>
         <p className="text-muted small text-uppercase fw-bold ls-wide">
-          Organise your day
+          Organise your day, Sylvia
         </p>
       </header>
 
@@ -171,7 +181,7 @@ const Tasks = () => {
         ))}
       </ul>
 
-      {showEnergyBar && (
+      {showEnergyBar && activeTab !== "add" && (
         <EnergyProgress tasks={tasks} dailyLimit={dailyLimit} />
       )}
 
@@ -236,21 +246,40 @@ const Tasks = () => {
       {activeTab === "all" && (
         <div className="fade-in">
           <div className="d-flex justify-content-between align-items-center mb-3 px-1">
-            <select
-              className="form-select form-select-sm w-auto border-0 bg-light fw-bold rounded-pill px-3 shadow-sm"
-              value={filter.category}
-              onChange={(e) =>
-                setFilter({ ...filter, category: e.target.value })
-              }
-            >
-              <option value="all">All Categories</option>
-              <option value="quickwin">Quick Wins</option>
-              <option value="admin">Admin</option>
-              <option value="focus">Focus</option>
-              <option value="physical">Physical</option>
-              <option value="social">Social</option>
-              <option value="stress">High Stress</option>
-            </select>
+            <div className="d-flex gap-2 align-items-center">
+              <select
+                className="form-select form-select-sm w-auto border-0 bg-light fw-bold rounded-pill px-3 shadow-sm"
+                value={filter.category}
+                onChange={(e) =>
+                  setFilter({ ...filter, category: e.target.value })
+                }
+              >
+                <option value="all">All Categories</option>
+                <option value="admin">Admin</option>
+                <option value="focus">Focus</option>
+                <option value="physical">Physical</option>
+                <option value="social">Social</option>
+                <option value="stress">High Stress</option>
+              </select>
+
+              <div className="form-check form-switch small ms-2">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="hideNonUrgent"
+                  checked={filter.hideNonUrgent}
+                  onChange={(e) =>
+                    setFilter({ ...filter, hideNonUrgent: e.target.checked })
+                  }
+                />
+                <label
+                  className="form-check-label text-muted fw-bold"
+                  htmlFor="hideNonUrgent"
+                >
+                  Hide non-urgent tasks
+                </label>
+              </div>
+            </div>
 
             <div className="form-check form-switch small">
               <input
@@ -271,10 +300,18 @@ const Tasks = () => {
 
           <div className="list-group list-group-flush shadow-sm rounded-4 overflow-hidden border">
             {tasks
-              .filter(
-                (t) =>
-                  filter.category === "all" || t.category === filter.category,
-              )
+              .filter((t) => {
+                if (
+                  filter.category !== "all" &&
+                  t.category !== filter.category
+                ) {
+                  return false;
+                }
+                if (filter.hideNonUrgent && t.urgency !== "now") {
+                  return false;
+                }
+                return true;
+              })
               .filter(isRecent)
               .filter((t) => showCompleted || !t.isCompleted)
               .map((t) => (
