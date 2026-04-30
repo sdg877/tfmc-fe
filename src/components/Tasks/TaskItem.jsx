@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 
 const categoryStyles = {
@@ -34,7 +34,6 @@ const categoryStyles = {
   },
 };
 
-// Added showEnergyBar to props
 const TaskItem = ({ task, setTasks, showEnergyBar }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -47,29 +46,6 @@ const TaskItem = ({ task, setTasks, showEnergyBar }) => {
 
   const token = localStorage.getItem("token");
   const baseURL = import.meta.env.VITE_API_URL;
-
-  const getCalculatedUrgency = (targetDate, manualUrgency) => {
-    if (!targetDate) return manualUrgency;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const due = new Date(targetDate);
-    due.setHours(0, 0, 0, 0);
-    const diffTime = due - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays <= 0) return "now";
-    if (diffDays <= 3) return "soon";
-    return manualUrgency;
-  };
-
-  const [previewUrgency, setPreviewUrgency] = useState(() =>
-    getCalculatedUrgency(task.dueDate, task.urgency),
-  );
-
-  useEffect(() => {
-    setPreviewUrgency(getCalculatedUrgency(editData.dueDate, editData.urgency));
-  }, [editData.dueDate, editData.urgency]);
-
-  const displayUrgency = getCalculatedUrgency(task.dueDate, task.urgency);
 
   const toggleStatus = async (field, value) => {
     try {
@@ -114,29 +90,18 @@ const TaskItem = ({ task, setTasks, showEnergyBar }) => {
     return (
       <form
         onSubmit={handleUpdate}
-        className="list-group-item p-3 border-primary shadow-sm bg-light mb-2 rounded"
+        className="list-group-item p-3 border-primary shadow-sm bg-light mb-2 rounded-4"
       >
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <input
-            className="form-control me-2"
-            value={editData.title}
-            onChange={(e) =>
-              setEditData({ ...editData, title: e.target.value })
-            }
-            required
-          />
-          <span
-            className={`badge ${previewUrgency === "now" ? "bg-danger" : previewUrgency === "soon" ? "bg-warning text-dark" : "bg-secondary"}`}
-          >
-            {previewUrgency}
-          </span>
-        </div>
-
+        <input
+          className="form-control mb-2 rounded-3"
+          value={editData.title}
+          onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+          required
+        />
         <div className="row g-2 mb-3">
-          <div className="col-4">
-            <label className="small fw-bold d-block">Category</label>
+          <div className="col-6">
             <select
-              className="form-select form-select-sm"
+              className="form-select form-select-sm rounded-3"
               value={editData.category}
               onChange={(e) =>
                 setEditData({ ...editData, category: e.target.value })
@@ -149,96 +114,27 @@ const TaskItem = ({ task, setTasks, showEnergyBar }) => {
               <option value="stress">Stress</option>
             </select>
           </div>
-
-          <div className="col-4">
-            <label className="small fw-bold d-block">
-              {showEnergyBar ? "Energy (1-5)" : "Urgency"}
-            </label>
-            {showEnergyBar ? (
-              <select
-                className="form-select form-select-sm"
-                value={editData.energyPoints}
-                onChange={(e) =>
-                  setEditData({
-                    ...editData,
-                    energyPoints: Number(e.target.value),
-                  })
-                }
-              >
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <select
-                className="form-select form-select-sm"
-                value={editData.urgency}
-                onChange={(e) =>
-                  setEditData({ ...editData, urgency: e.target.value })
-                }
-              >
-                <option value="later">later</option>
-                <option value="soon">soon</option>
-                <option value="now">now</option>
-              </select>
-            )}
+          <div className="col-6">
+            <input
+              type="date"
+              className="form-control form-select-sm rounded-3"
+              value={editData.dueDate}
+              onChange={(e) =>
+                setEditData({ ...editData, dueDate: e.target.value })
+              }
+            />
           </div>
-
-          <div className="col-4">
-            <label className="small fw-bold d-block">
-              {showEnergyBar ? "Urgency" : "Due Date"}
-            </label>
-            {showEnergyBar ? (
-              <select
-                className="form-select form-select-sm"
-                value={editData.urgency}
-                onChange={(e) =>
-                  setEditData({ ...editData, urgency: e.target.value })
-                }
-              >
-                <option value="later">later</option>
-                <option value="soon">soon</option>
-                <option value="now">now</option>
-              </select>
-            ) : (
-              <input
-                type="date"
-                className="form-control form-select-sm"
-                value={editData.dueDate}
-                onChange={(e) =>
-                  setEditData({ ...editData, dueDate: e.target.value })
-                }
-              />
-            )}
-          </div>
-
-          {showEnergyBar && (
-            <div className="col-12 mt-2">
-              <label className="small fw-bold d-block">Due Date</label>
-              <input
-                type="date"
-                className="form-control form-select-sm"
-                value={editData.dueDate}
-                onChange={(e) =>
-                  setEditData({ ...editData, dueDate: e.target.value })
-                }
-              />
-            </div>
-          )}
         </div>
-
         <div className="d-flex gap-2">
           <button
             type="submit"
-            className="btn btn-success btn-sm flex-grow-1 fw-bold"
+            className="btn btn-success btn-sm flex-grow-1 rounded-3 fw-bold"
           >
             Save
           </button>
           <button
             type="button"
-            className="btn btn-outline-secondary btn-sm"
+            className="btn btn-outline-secondary btn-sm rounded-3"
             onClick={() => setIsEditing(false)}
           >
             Cancel
@@ -250,45 +146,67 @@ const TaskItem = ({ task, setTasks, showEnergyBar }) => {
 
   return (
     <div
-      className={`list-group-item d-flex justify-content-between align-items-center mb-2 shadow-sm border rounded p-3 ${task.isCompleted ? "bg-light opacity-75" : ""}`}
+      className={`list-group-item d-flex justify-content-between align-items-center mb-2 shadow-sm border rounded-4 p-3 ${task.isCompleted ? "bg-light opacity-75" : "bg-white"}`}
     >
       <div className="d-flex align-items-center gap-3">
-        <input
-          type="checkbox"
-          className="form-check-input mt-0"
-          style={{ width: "1.3rem", height: "1.3rem", cursor: "pointer" }}
-          checked={task.isCompleted}
-          onChange={() => toggleStatus("isCompleted", !task.isCompleted)}
-        />
+        <div
+          onClick={() => toggleStatus("isCompleted", !task.isCompleted)}
+          style={{
+            width: "28px",
+            height: "28px",
+            borderRadius: "50%",
+            border: task.isCompleted ? "none" : "2px solid #e9ecef",
+            backgroundColor: task.isCompleted ? "#9b5de5" : "#f8f9fa",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            boxShadow: task.isCompleted
+              ? "0 4px 12px rgba(155, 93, 229, 0.3)"
+              : "inset 0 1px 2px rgba(0,0,0,0.05)",
+          }}
+        >
+          {task.isCompleted ? (
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          ) : (
+            <div
+              style={{
+                width: "4px",
+                height: "4px",
+                borderRadius: "50%",
+                backgroundColor: "#dee2e6",
+              }}
+            ></div>
+          )}
+        </div>
 
         <div>
           <h6
-            className={`mb-0 fw-bold ${task.isCompleted ? "text-decoration-line-through text-muted" : ""}`}
+            className={`mb-0 fw-bold ${task.isCompleted ? "text-decoration-line-through text-muted" : "text-dark"}`}
           >
             {task.title}
           </h6>
           <div className="d-flex flex-wrap gap-2 mt-1">
             <span
-              className="badge small text-capitalize"
+              className="badge small border-0"
               style={categoryStyles[task.category] || categoryStyles.default}
             >
-              {task.category || "admin"}
+              {task.category}
             </span>
-
-            {showEnergyBar && (
-              <span className="badge border text-dark bg-light small">
-                ⚡ {task.energyPoints || 1}
-              </span>
-            )}
-
-            <span
-              className={`badge small ${displayUrgency === "now" ? "bg-danger" : displayUrgency === "soon" ? "bg-warning text-dark" : "bg-secondary"}`}
-            >
-              {displayUrgency}
-            </span>
-
             {task.dueDate && (
-              <small className="text-muted">
+              <small className="text-muted" style={{ fontSize: "0.75rem" }}>
                 📅 {new Date(task.dueDate).toLocaleDateString("en-GB")}
               </small>
             )}
@@ -302,23 +220,53 @@ const TaskItem = ({ task, setTasks, showEnergyBar }) => {
             onClick={() =>
               toggleStatus("isPlannedForToday", !task.isPlannedForToday)
             }
-            className={`btn btn-sm ${task.isPlannedForToday ? "btn-warning shadow-sm" : "btn-outline-secondary border-0"}`}
-            title="Do Today"
+            className="btn btn-sm border-0 fs-5 p-0 px-2"
+            style={{ color: task.isPlannedForToday ? "#ffc107" : "#e0e0e0" }}
+            title="Star this for today"
           >
-            ⚡
+            {task.isPlannedForToday ? "★" : "☆"}
           </button>
         )}
+
+        {/* ICON BUTTON FOR EDIT */}
         <button
           onClick={() => setIsEditing(true)}
-          className="btn btn-sm btn-outline-primary border-0 ms-1"
+          className="btn btn-sm text-primary border-0 opacity-50 p-0 px-2"
+          title="Edit task"
         >
-          Edit
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
         </button>
+
         <button
           onClick={deleteTask}
-          className="btn btn-sm btn-outline-danger border-0"
+          className="btn btn-sm text-danger border-0 opacity-50 p-0 px-2"
+          title="Delete task"
         >
-          &times;
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
         </button>
       </div>
     </div>
