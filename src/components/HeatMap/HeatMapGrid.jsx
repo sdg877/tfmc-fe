@@ -1,6 +1,6 @@
 import React from "react";
 
-const HeatMapGrid = ({ data, joinDate }) => {
+const HeatMapGrid = ({ data, joinDate, daysToView = 28 }) => {
   const getLevelColor = (level) => {
     switch (level) {
       case 4:
@@ -16,73 +16,100 @@ const HeatMapGrid = ({ data, joinDate }) => {
     }
   };
 
-  const generateDays = () => {
-    const start = new Date(joinDate);
-    const today = new Date();
-    const days = [];
+  const today = new Date();
+  const joinDateStr = joinDate
+    ? new Date(joinDate).toISOString().split("T")[0]
+    : null;
 
-    const diffTime = Math.abs(today - start);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const days = Array.from({ length: daysToView }, (_, i) => {
+    const d = new Date();
+    d.setDate(today.getDate() - (daysToView - 1 - i));
+    return d.toISOString().split("T")[0];
+  });
 
-    const daysToShow = Math.max(diffDays, 1);
-    const windowSize = Math.min(daysToShow, 30);
-
-    for (let i = 0; i < windowSize; i++) {
-      const d = new Date();
-      d.setDate(today.getDate() - (windowSize - 1 - i));
-      days.push(d.toISOString().split("T")[0]);
-    }
-    return days;
-  };
-
-  const activeDays = generateDays();
+  const isYearly = daysToView > 30;
 
   return (
-    <div className="card shadow-sm border-0 rounded-4 p-4">
-      <h5 className="fw-bold mb-3 text-dark">Activity Tracking</h5>
-
-      <div
-        className="d-flex flex-nowrap gap-2 overflow-x-auto pb-2"
-        style={{ scrollbarWidth: "thin" }}
-      >
-        {activeDays.map((date) => {
-          const dayData = data[date] || { level: 0, count: 0 };
-          return (
-            <div
-              key={date}
-              className="rounded-2 border flex-shrink-0"
-              style={{
-                width: "35px",
-                height: "35px",
-                backgroundColor: getLevelColor(dayData.level),
-                borderColor: "#eee !important",
-              }}
-              title={
-                dayData.count > 0
-                  ? `${date}: ${dayData.count} tasks completed`
-                  : `${date}: No tasks completed`
-              }
-            />
-          );
-        })}
-      </div>
-
-      <div className="mt-4 d-flex gap-3 align-items-center justify-content-center">
-        <small className="text-muted small fw-bold">LOW</small>
-        <div className="d-flex gap-1">
-          {[1, 2, 3, 4].map((l) => (
-            <div
-              key={l}
-              className="rounded-1"
-              style={{
-                width: "12px",
-                height: "12px",
-                backgroundColor: getLevelColor(l),
-              }}
-            />
-          ))}
+    <div className="card shadow-sm border-0 rounded-4 bg-white h-100">
+      <div className="card-body p-4 text-center">
+        <div className="mb-4">
+          <h5 className="fw-bold text-dark mb-1">Your Wins</h5>
+          <p className="text-muted small mb-0">
+            {isYearly ? "One year of growth" : "Last 4 weeks"}
+          </p>
         </div>
-        <small className="text-muted small fw-bold">HIGH</small>
+
+        <div
+          className={
+            isYearly ? "overflow-x-auto pb-2" : "d-flex justify-content-center"
+          }
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isYearly ? "none" : "repeat(7, 1fr)",
+              gridTemplateRows: isYearly ? "repeat(7, 1fr)" : "none",
+              gridAutoFlow: isYearly ? "column" : "row",
+              gap: isYearly ? "6px" : "10px",
+              width: isYearly ? "max-content" : "100%",
+              maxWidth: isYearly ? "none" : "280px",
+              margin: "0 auto",
+            }}
+          >
+            {days.map((date) => {
+              const dayInfo = data?.[date] || { level: 0, count: 0 };
+              const isJoinDate = date === joinDateStr;
+
+              const hoverText =
+                dayInfo.count === 1
+                  ? `${dayInfo.count} task successfully completed`
+                  : dayInfo.count > 1
+                    ? `${dayInfo.count} tasks successfully completed`
+                    : `No tasks completed yet`;
+
+              return (
+                <div
+                  key={date}
+                  className="rounded-2 border flex-shrink-0"
+                  title={`${date}: ${hoverText}`}
+                  style={{
+                    aspectRatio: "1 / 1",
+                    backgroundColor: getLevelColor(dayInfo.level),
+                    borderColor: isJoinDate ? "#9b5de5" : "#f4f4f4",
+                    borderWidth: isJoinDate ? "2px" : "1px",
+                    width: isYearly ? "14px" : "auto",
+                    cursor: "pointer",
+                  }}
+                >
+                  {isJoinDate && (
+                    <span style={{ fontSize: isYearly ? "6px" : "12px" }}>
+                      ✨
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-4 d-flex justify-content-center align-items-center gap-2">
+          <div className="d-flex gap-1">
+            {[1, 2, 3, 4].map((l) => (
+              <div
+                key={l}
+                className="rounded-circle"
+                style={{
+                  width: "8px",
+                  height: "8px",
+                  backgroundColor: getLevelColor(l),
+                }}
+              />
+            ))}
+          </div>
+          <small className="text-muted fw-bold" style={{ fontSize: "0.6rem" }}>
+            CONSISTENCY
+          </small>
+        </div>
       </div>
     </div>
   );
