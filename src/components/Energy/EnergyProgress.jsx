@@ -3,8 +3,8 @@ import React from "react";
 const EnergyProgress = ({ tasks, dailyLimit }) => {
   const currentCapacity = Number(dailyLimit) || 100;
 
-  const calculateEnergy = (list) => {
-    if (!list || list.length === 0) return 0;
+  const calculateEnergyBreakdown = (list) => {
+    if (!list || list.length === 0) return { completed: 0, planned: 0 };
 
     const today = new Date().toLocaleDateString("en-GB");
     const weights = {
@@ -15,8 +15,8 @@ const EnergyProgress = ({ tasks, dailyLimit }) => {
       stress: 45,
     };
 
-    return list
-      .filter((t) => {
+    return list.reduce(
+      (acc, t) => {
         const isPlannedToday = t.isPlannedForToday === true;
         const isDueToday =
           t.dueDate &&
@@ -26,20 +26,33 @@ const EnergyProgress = ({ tasks, dailyLimit }) => {
           t.updatedAt &&
           new Date(t.updatedAt).toLocaleDateString("en-GB") === today;
 
-        return isPlannedToday || isDueToday || completedToday;
-      })
-      .reduce((total, t) => total + (weights[t.category] || 10), 0);
+        if (completedToday) {
+          acc.completed += weights[t.category] || 10;
+        } else if (isPlannedToday || isDueToday) {
+          acc.planned += weights[t.category] || 10;
+        }
+        return acc;
+      },
+      { completed: 0, planned: 0 },
+    );
   };
 
-  const taskUnits = calculateEnergy(tasks);
-  
-  const percentage = currentCapacity > 0 
-    ? Math.min(Math.round((taskUnits / currentCapacity) * 100), 100) 
-    : 0;
+  const { completed, planned } = calculateEnergyBreakdown(tasks);
+  const totalUnits = completed + planned;
+
+  const completedWidth = Math.min((completed / currentCapacity) * 100, 100);
+  const plannedWidth = Math.min(
+    (planned / currentCapacity) * 100,
+    100 - completedWidth,
+  );
+  const totalPercentage = Math.min(
+    Math.round((totalUnits / currentCapacity) * 100),
+    100,
+  );
 
   const getBatteryColor = () => {
-    if (percentage > 90) return "#dc3545";
-    if (percentage > 60) return "#fd7e14";
+    if (totalPercentage > 90) return "#dc3545";
+    if (totalPercentage > 60) return "#fd7e14";
     return "#198754";
   };
 
@@ -48,41 +61,91 @@ const EnergyProgress = ({ tasks, dailyLimit }) => {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
           <h6 className="fw-bold mb-0 text-dark">Daily Energy Battery</h6>
-          <small className="text-muted text-uppercase fw-bold ls-wide" style={{ fontSize: "0.7rem" }}>
-            Spent + Planned Energy
-          </small>
+          <div className="d-flex gap-3 mt-1">
+            <small
+              className="fw-bold text-uppercase"
+              style={{ fontSize: "0.65rem", color: getBatteryColor() }}
+            >
+              ● Completed: {completed}
+            </small>
+            <small
+              className="fw-bold text-uppercase text-muted"
+              style={{ fontSize: "0.65rem" }}
+            >
+              ○ Planned: {planned}
+            </small>
+          </div>
         </div>
-        <span className={`badge rounded-pill ${taskUnits > currentCapacity ? "bg-danger" : "bg-dark"} px-3 py-2`}>
-          {taskUnits} / {currentCapacity} Units
+        <span
+          className={`badge rounded-pill ${totalUnits > currentCapacity ? "bg-danger" : "bg-dark"} px-3 py-2`}
+        >
+          {totalUnits} / {currentCapacity} Units
         </span>
       </div>
 
       <div className="d-flex align-items-center">
-        <div className="position-relative flex-grow-1" style={{
+        <div
+          className="position-relative flex-grow-1"
+          style={{
             height: "55px",
             border: "4px solid #212529",
             borderRadius: "14px",
             padding: "4px",
             backgroundColor: "#fff",
-          }}>
-          <div className="d-flex h-100 w-100" style={{ borderRadius: "6px", overflow: "hidden", backgroundColor: "#f8f9fa" }}>
-            <div className="progress-bar-animated progress-bar-striped" style={{
-                width: `${percentage}%`,
+          }}
+        >
+          <div
+            className="d-flex h-100 w-100"
+            style={{
+              borderRadius: "6px",
+              overflow: "hidden",
+              backgroundColor: "#f8f9fa",
+            }}
+          >
+            <div
+              style={{
+                width: `${completedWidth}%`,
                 backgroundColor: getBatteryColor(),
-                transition: "width 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+                transition: "width 0.6s ease",
                 height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}>
-              {taskUnits > 0 && <span className="small fw-bold text-white">{percentage}%</span>}
+              }}
+            />
+            <div
+              className="progress-bar-striped progress-bar-animated"
+              style={{
+                width: `${plannedWidth}%`,
+                backgroundColor: getBatteryColor(),
+                opacity: 0.4,
+                transition: "width 0.6s ease",
+                height: "100%",
+              }}
+            />
+
+            <div
+              className="position-absolute w-100 h-100 d-flex align-items-center justify-content-center"
+              style={{ left: 0, top: 0 }}
+            >
+              <span
+                className="small fw-bold"
+                style={{ color: totalPercentage > 50 ? "#fff" : "#212529" }}
+              >
+                {totalPercentage}%
+              </span>
             </div>
           </div>
         </div>
-        <div style={{ width: "10px", height: "22px", backgroundColor: "#212529", borderRadius: "0 5px 5px 0", marginLeft: "-1px" }} />
+        <div
+          style={{
+            width: "10px",
+            height: "22px",
+            backgroundColor: "#212529",
+            borderRadius: "0 5px 5px 0",
+            marginLeft: "-1px",
+          }}
+        />
       </div>
 
-      {taskUnits > currentCapacity && (
+      {totalUnits > currentCapacity && (
         <div className="mt-3 text-danger small fw-bold text-center animate-pulse border-top pt-2">
           ⚠️ OVERLOAD: Capacity exceeded.
         </div>
