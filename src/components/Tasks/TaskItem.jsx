@@ -34,7 +34,7 @@ const categoryStyles = {
   },
 };
 
-const TaskItem = ({ task, setTasks, showEnergyBar }) => {
+const TaskItem = ({ task, setTasks, onSelect }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     title: task.title,
@@ -47,7 +47,8 @@ const TaskItem = ({ task, setTasks, showEnergyBar }) => {
   const token = localStorage.getItem("token");
   const baseURL = import.meta.env.VITE_API_URL;
 
-  const toggleStatus = async (field, value) => {
+  const toggleStatus = async (e, field, value) => {
+    e.stopPropagation();
     try {
       const res = await axios.put(
         `${baseURL}/tasks/${task._id}`,
@@ -73,7 +74,8 @@ const TaskItem = ({ task, setTasks, showEnergyBar }) => {
     }
   };
 
-  const deleteTask = async () => {
+  const deleteTask = async (e) => {
+    e.stopPropagation();
     if (window.confirm("Delete this task?")) {
       try {
         await axios.delete(`${baseURL}/tasks/${task._id}`, {
@@ -147,10 +149,12 @@ const TaskItem = ({ task, setTasks, showEnergyBar }) => {
   return (
     <div
       className={`list-group-item d-flex justify-content-between align-items-center mb-2 shadow-sm border rounded-4 p-3 ${task.isCompleted ? "bg-light opacity-75" : "bg-white"}`}
+      onClick={() => onSelect(task)}
+      style={{ cursor: "pointer" }}
     >
       <div className="d-flex align-items-center gap-3">
         <div
-          onClick={() => toggleStatus("isCompleted", !task.isCompleted)}
+          onClick={(e) => toggleStatus(e, "isCompleted", !task.isCompleted)}
           style={{
             width: "28px",
             height: "28px",
@@ -217,22 +221,21 @@ const TaskItem = ({ task, setTasks, showEnergyBar }) => {
       <div className="d-flex gap-1 align-items-center">
         {!task.isCompleted && (
           <button
-            onClick={() =>
-              toggleStatus("isPlannedForToday", !task.isPlannedForToday)
+            onClick={(e) =>
+              toggleStatus(e, "isPlannedForToday", !task.isPlannedForToday)
             }
             className="btn btn-sm border-0 fs-5 p-0 px-2"
             style={{ color: task.isPlannedForToday ? "#ffc107" : "#e0e0e0" }}
-            title="Star this for today"
           >
             {task.isPlannedForToday ? "★" : "☆"}
           </button>
         )}
-
-        {/* ICON BUTTON FOR EDIT */}
         <button
-          onClick={() => setIsEditing(true)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsEditing(true);
+          }}
           className="btn btn-sm text-primary border-0 opacity-50 p-0 px-2"
-          title="Edit task"
         >
           <svg
             width="18"
@@ -248,11 +251,9 @@ const TaskItem = ({ task, setTasks, showEnergyBar }) => {
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
           </svg>
         </button>
-
         <button
-          onClick={deleteTask}
+          onClick={(e) => deleteTask(e)}
           className="btn btn-sm text-danger border-0 opacity-50 p-0 px-2"
-          title="Delete task"
         >
           <svg
             width="20"
