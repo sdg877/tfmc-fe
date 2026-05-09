@@ -38,77 +38,76 @@ const HeatMapGrid = ({ data, joinDate, daysToView = 28 }) => {
   });
 
   return (
-    <div className="card shadow-sm border-0 rounded-4 bg-white h-100">
-      <div className="card-body p-4 text-center">
+    <div className="w-100 h-100 d-flex flex-column align-items-center justify-content-center py-2">
+      <div className="text-center mb-4">
         <h5 className="fw-bold text-dark mb-1">Your Wins</h5>
-        <p className="text-muted small mb-4">Last 4 weeks</p>
+        <p className="text-muted small">Last 4 weeks</p>
+      </div>
 
-        <div className="d-flex justify-content-center">
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(7, 1fr)",
-              gap: "10px",
-              width: "100%",
-              maxWidth: "280px",
-            }}
-            onMouseLeave={() => setHoveredDay(null)}
-          >
-            {days.map((day) => {
-              const dayInfo =
-                data && data[day.key] ? data[day.key] : { level: 0, count: 0 };
-              const isJoinDate = day.key === joinDateKey;
+      <div className="d-flex justify-content-center w-100">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, 1fr)",
+            gap: "12px",
+            width: "100%",
+            maxWidth: "500px",
+          }}
+          onMouseLeave={() => setHoveredDay(null)}
+        >
+          {days.map((day) => {
+            const dayInfo =
+              data && data[day.key] ? data[day.key] : { level: 0, count: 0 };
+            const isJoinDate = day.key === joinDateKey;
+            const isBeforeJoining =
+              joinDateObj && day.dateObj < joinDateObj.setHours(0, 0, 0, 0);
 
-              const isBeforeJoining =
-                joinDateObj && day.dateObj < joinDateObj.setHours(0, 0, 0, 0);
-
-              return (
-                <div
-                  key={day.key}
-                  onMouseEnter={() =>
-                    !isBeforeJoining &&
-                    setHoveredDay({
-                      date: day.display,
-                      count: dayInfo.count,
-                    })
-                  }
-                  style={{
-                    aspectRatio: "1 / 1",
-                    backgroundColor: getLevelColor(
-                      dayInfo.level,
-                      isBeforeJoining,
-                    ),
-                    borderRadius: "6px",
-                    border: isJoinDate
-                      ? "2px solid #4cc9f0"
-                      : "1px solid #f4f4f4",
-                    boxSizing: "border-box",
-                    cursor: isBeforeJoining ? "default" : "pointer",
-                    opacity: isBeforeJoining ? 0.5 : 1,
-                  }}
-                />
-              );
-            })}
-          </div>
+            return (
+              <div
+                key={day.key}
+                onMouseEnter={() =>
+                  !isBeforeJoining &&
+                  setHoveredDay({
+                    date: day.display,
+                    count: dayInfo.count,
+                  })
+                }
+                style={{
+                  aspectRatio: "1 / 1",
+                  backgroundColor: getLevelColor(
+                    dayInfo.level,
+                    isBeforeJoining,
+                  ),
+                  borderRadius: "8px",
+                  border: isJoinDate ? "3px solid #4cc9f0" : "1px solid #eee",
+                  boxSizing: "border-box",
+                  cursor: isBeforeJoining ? "default" : "pointer",
+                  opacity: isBeforeJoining ? 0.4 : 1,
+                  transition: "transform 0.2s ease-in-out",
+                }}
+                className="heatmap-square"
+              />
+            );
+          })}
         </div>
+      </div>
 
-        <div className="mt-3" style={{ height: "24px" }}>
-          {hoveredDay ? (
-            <p className="text-dark fw-bold small m-0">
-              {hoveredDay.date}: {hoveredDay.count}{" "}
-              {hoveredDay.count === 1 ? "task" : "tasks"}
-            </p>
-          ) : (
-            <p className="text-muted small m-0">Consistency is key ✨</p>
-          )}
-        </div>
-
-        {joinDateObj && (
-          <p className="text-muted small mt-2 pt-2 border-top">
-            Joined: <strong>{formatDisplay(joinDateObj)}</strong>
+      <div className="mt-4 text-center" style={{ minHeight: "24px" }}>
+        {hoveredDay ? (
+          <p className="text-dark fw-bold m-0 animate-fade-in">
+            {hoveredDay.date}: {hoveredDay.count}{" "}
+            {hoveredDay.count === 1 ? "task" : "tasks"}
           </p>
+        ) : (
+          <p className="text-muted m-0">Consistency is key ✨</p>
         )}
       </div>
+
+      {joinDateObj && (
+        <p className="text-muted small mt-3 pt-3 border-top w-75 text-center">
+          Joined: <strong>{formatDisplay(joinDateObj)}</strong>
+        </p>
+      )}
     </div>
   );
 };
