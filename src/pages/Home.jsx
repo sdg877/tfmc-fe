@@ -3,12 +3,46 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import HeatMapGrid from "../components/HeatMap/HeatMapGrid";
 
+const categoryStyles = {
+  admin: {
+    backgroundColor: "#f3e5f5",
+    color: "#7b1fa2",
+    border: "1px solid #ce93d8",
+  },
+  physical: {
+    backgroundColor: "#e8f5e9",
+    color: "#2e7d32",
+    border: "1px solid #a5d6a7",
+  },
+  social: {
+    backgroundColor: "#e3f2fd",
+    color: "#1565c0",
+    border: "1px solid #90caf9",
+  },
+  focus: {
+    backgroundColor: "#fff3e0",
+    color: "#e65100",
+    border: "1px solid #ffcc80",
+  },
+  stress: {
+    backgroundColor: "#fce4ec",
+    color: "#c2185b",
+    border: "1px solid #f48fb1",
+  },
+  default: {
+    backgroundColor: "#f5f5f5",
+    color: "#757575",
+    border: "1px solid #e0e0e0",
+  },
+};
+
 const Home = () => {
   const [tasks, setTasks] = useState([]);
   const [userName, setUserName] = useState("");
   const [joinDate, setJoinDate] = useState(null);
   const [heatmapData, setHeatmapData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [selectedTask, setSelectedTask] = useState(null);
   const token = localStorage.getItem("token");
 
   const hour = new Date().getHours();
@@ -34,7 +68,6 @@ const Home = () => {
           setJoinDate(resUser.data.createdAt);
 
           const weights = {
-            quickwin: 5,
             admin: 10,
             physical: 20,
             social: 30,
@@ -44,15 +77,15 @@ const Home = () => {
           const dayStats = {};
 
           resTasks.data.forEach((task) => {
-            if (task.isCompleted && task.updatedAt) {
-              const date = new Date(task.updatedAt).toISOString().split("T")[0];
+            const dateToUse = task.completedAt || task.updatedAt;
+            if (task.isCompleted && dateToUse) {
+              const d = new Date(dateToUse);
+              const dateKey = d.toLocaleDateString("sv-SE");
               const energy = weights[task.category] || 10;
-
-              if (!dayStats[date]) {
-                dayStats[date] = { totalEnergy: 0, count: 0 };
-              }
-              dayStats[date].totalEnergy += energy;
-              dayStats[date].count += 1;
+              if (!dayStats[dateKey])
+                dayStats[dateKey] = { totalEnergy: 0, count: 0 };
+              dayStats[dateKey].totalEnergy += energy;
+              dayStats[dateKey].count += 1;
             }
           });
 
@@ -77,19 +110,22 @@ const Home = () => {
     }
   }, [token]);
 
-  const todayStr = new Date().toLocaleDateString("en-GB");
+  const todayLocal = new Date().toLocaleDateString("sv-SE");
+
   const overdue = tasks.filter(
     (t) =>
       !t.isCompleted &&
       t.dueDate &&
       new Date(t.dueDate) < new Date().setHours(0, 0, 0, 0),
   );
+
   const dueToday = tasks.filter(
     (t) =>
       !t.isCompleted &&
       (t.urgency === "now" ||
+        t.isPlannedForToday === true ||
         (t.dueDate &&
-          new Date(t.dueDate).toLocaleDateString("en-GB") === todayStr)),
+          new Date(t.dueDate).toLocaleDateString("sv-SE") === todayLocal)),
   );
 
   if (!token) {
@@ -99,8 +135,7 @@ const Home = () => {
           Master your energy.
         </h1>
         <p className="lead text-muted mb-5">
-          Track your Brain Load and prevent burnout with our visual energy
-          battery.
+          Track your Brain Load and prevent burnout.
         </p>
         <div className="d-flex gap-3 justify-content-center">
           <Link
@@ -122,13 +157,13 @@ const Home = () => {
 
   if (loading)
     return (
-      <div className="container py-5 text-center">
-        Loading your dashboard...
+      <div className="container py-5 text-center text-muted">
+        Loading dashboard...
       </div>
     );
 
   return (
-    <div className="container mt-5">
+    <div className="container-fluid mt-4 px-lg-5">
       <header className="mb-5 text-center">
         <h1 className="display-5 fw-bold text-dark mb-1">
           {greeting}
@@ -139,79 +174,199 @@ const Home = () => {
         </p>
       </header>
 
-      <div className="row g-4">
-        <div className="col-md-4">
-          <div className="card border-0 shadow-sm rounded-4 bg-dark text-white p-4 h-100">
-            <h5 className="fw-bold mb-4 opacity-75">Status</h5>
-            <div className="mb-3">
-              <h2 className="mb-0 fw-bold">{dueToday.length}</h2>
-              <small className="text-white-50 text-uppercase fw-bold">
-                Due Today
-              </small>
+      {selectedTask && (
+        <div
+          className="modal fade show d-block"
+          style={{
+            backgroundColor: "rgba(0,0,0,0.6)",
+            backdropFilter: "blur(4px)",
+            zIndex: 1050,
+          }}
+          onClick={() => setSelectedTask(null)}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+              <div className="modal-header border-0 p-4 pb-0 d-flex justify-content-between align-items-start">
+                <div>
+                  <span
+                    className="badge mb-2 text-uppercase"
+                    style={
+                      categoryStyles[selectedTask.category] ||
+                      categoryStyles.default
+                    }
+                  >
+                    {selectedTask.category}
+                  </span>
+                  <h3 className="modal-title fw-bold text-dark">
+                    {selectedTask.title}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setSelectedTask(null)}
+                ></button>
+              </div>
+              <div className="modal-body p-4">
+                {selectedTask.notes && (
+                  <div className="mb-4">
+                    <label className="small fw-bold text-muted text-uppercase ls-wide d-block mb-1">
+                      Notes
+                    </label>
+                    <p
+                      className="bg-light p-3 rounded-3 text-dark mb-0"
+                      style={{ whiteSpace: "pre-wrap" }}
+                    >
+                      {selectedTask.notes}
+                    </p>
+                  </div>
+                )}
+                <div className="row g-3">
+                  <div className="col-6">
+                    <label className="small fw-bold text-muted text-uppercase ls-wide d-block mb-1">
+                      Urgency
+                    </label>
+                    <span
+                      className={`badge rounded-pill px-3 py-2 bg-dark text-white`}
+                    >
+                      {selectedTask.urgency.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="col-6">
+                    <label className="small fw-bold text-muted text-uppercase ls-wide d-block mb-1">
+                      Due Date
+                    </label>
+                    <p className="fw-bold mb-0 text-dark">
+                      {selectedTask.dueDate
+                        ? new Date(selectedTask.dueDate).toLocaleDateString(
+                            "en-GB",
+                          )
+                        : "No date set"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer border-0 bg-light p-3 justify-content-start">
+                <small className="text-muted">
+                  Added on:{" "}
+                  {new Date(
+                    selectedTask.createdAt || Date.now(),
+                  ).toLocaleDateString("en-GB")}
+                </small>
+              </div>
             </div>
-            <div className="mb-4">
-              <h2 className="mb-0 text-danger fw-bold">{overdue.length}</h2>
-              <small className="text-white-50 text-uppercase fw-bold">
-                Overdue
-              </small>
+          </div>
+        </div>
+      )}
+
+      <div
+        className="row g-4 align-items-stretch"
+        style={{ minHeight: "380px" }}
+      >
+        <div className="col-lg-3">
+          <div
+            className="card border-0 shadow-sm rounded-4 h-100 p-4"
+            style={{ backgroundColor: "#f3e5f5" }}
+          >
+            <h6
+              className="text-uppercase fw-bold small mb-4"
+              style={{ color: "#7b1fa2" }}
+            >
+              Overview
+            </h6>
+            <div className="flex-grow-1">
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h1 className="display-5 fw-bold mb-0 text-dark">
+                    {dueToday.length}
+                  </h1>
+                  <small
+                    className="fw-bold text-uppercase opacity-75"
+                    style={{ fontSize: "10px" }}
+                  >
+                    Active Today
+                  </small>
+                </div>
+                <div className="text-end">
+                  <h1 className="display-5 fw-bold mb-0 text-danger">
+                    {overdue.length}
+                  </h1>
+                  <small
+                    className="fw-bold text-uppercase opacity-75"
+                    style={{ fontSize: "10px" }}
+                  >
+                    Overdue
+                  </small>
+                </div>
+              </div>
             </div>
             <Link
               to="/tasks"
-              className="btn btn-light btn-sm rounded-pill w-100 mt-auto fw-bold py-2"
+              className="btn btn-white btn-sm rounded-pill w-100 fw-bold py-2 shadow-sm border mt-auto"
             >
-              Go to Tasks
+              Manage Tasks
             </Link>
           </div>
         </div>
 
-        <div className="col-md-8">
-          {overdue.length > 0 && (
-            <div className="mb-4">
-              <h6 className="text-danger fw-bold text-uppercase small mb-3">
-                ⚠️ Immediate Attention
-              </h6>
-              <div className="list-group border-0">
-                {overdue.slice(0, 2).map((t) => (
-                  <div
-                    key={t._id}
-                    className="list-group-item border-start border-danger border-4 mb-2 rounded shadow-sm py-3"
-                  >
-                    <span className="fw-bold">{t.title}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="mb-4">
-            <h6 className="text-dark fw-bold text-uppercase small mb-3">
+        <div className="col-lg-4">
+          <div className="card border-0 shadow-sm rounded-4 h-100 bg-white p-4">
+            <h6 className="text-dark fw-bold text-uppercase small mb-4">
               📅 Today's Plan
             </h6>
-            <div className="list-group border-0">
+            <div
+              className="overflow-auto flex-grow-1"
+              style={{ maxHeight: "250px" }}
+            >
+              {overdue.length > 0 && (
+                <div className="mb-3">
+                  {overdue.slice(0, 2).map((t) => (
+                    <div
+                      key={t._id}
+                      className="p-3 mb-2 bg-danger bg-opacity-10 border-start border-danger border-3 rounded small fw-bold text-danger"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => setSelectedTask(t)}
+                    >
+                      {t.title}
+                    </div>
+                  ))}
+                </div>
+              )}
               {dueToday.length > 0 ? (
-                dueToday.slice(0, 3).map((t) => (
+                dueToday.map((t) => (
                   <div
                     key={t._id}
-                    className="list-group-item border-0 mb-2 rounded shadow-sm py-3 bg-white"
+                    className="p-3 mb-2 bg-light rounded small fw-bold text-dark"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => setSelectedTask(t)}
                   >
-                    <span className="fw-bold text-dark">{t.title}</span>
+                    {t.title}
                   </div>
                 ))
               ) : (
-                <div className="p-4 text-center bg-light rounded-4 text-muted border border-dashed">
+                <div className="p-5 text-center text-muted border border-dashed rounded-4 h-100 d-flex align-items-center justify-content-center">
                   Clear skies today! ☕
                 </div>
               )}
             </div>
           </div>
         </div>
-        <div className="row justify-content-center mt-5 mb-5">
-          <div className="col-12 col-md-6 col-lg-4">
-            <HeatMapGrid
-              data={heatmapData}
-              joinDate={joinDate}
-              daysToView={28}
-            />
+
+        <div className="col-lg-5">
+          <div className="card border-0 shadow-sm rounded-4 h-100 bg-white p-4 d-flex flex-column align-items-center">
+            <h6 className="text-muted fw-bold text-uppercase small mb-4 align-self-start">
+              Activity Overview
+            </h6>
+            <div className="d-flex align-items-center justify-content-center flex-grow-1 w-100">
+              <HeatMapGrid
+                data={heatmapData}
+                joinDate={joinDate}
+                daysToView={28}
+              />
+            </div>
           </div>
         </div>
       </div>
