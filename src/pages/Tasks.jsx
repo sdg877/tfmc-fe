@@ -55,6 +55,10 @@ const Tasks = () => {
   const [currentLoad, setCurrentLoad] = useState(0);
   const [selectedTask, setSelectedTask] = useState(null);
 
+  const [silencedLevel, setSilencedLevel] = useState(() => {
+    return parseInt(localStorage.getItem("silencedEnergyLevel")) || 0;
+  });
+
   const baseURL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
 
@@ -120,13 +124,13 @@ const Tasks = () => {
       else if (newLoad >= 90) reachedLevel = 90;
       else if (newLoad >= 80) reachedLevel = 80;
 
-      if (reachedLevel > 0 && reachedLevel !== warningLevel) {
+      if (reachedLevel > 0 && reachedLevel > silencedLevel) {
         setWarningLevel(reachedLevel);
         setShowWarning(true);
         setFilter((prev) => ({ ...prev, hideNonUrgent: true }));
       }
     }
-  }, [tasks, showEnergyBar, warningLevel]);
+  }, [tasks, showEnergyBar, silencedLevel]);
 
   const handleTaskAdded = (newTask) => {
     setTasks([newTask, ...tasks]);
@@ -174,7 +178,16 @@ const Tasks = () => {
 
       <EnergyWarningModal
         show={showWarning}
-        onClose={() => setShowWarning(false)}
+        onClose={(isSilenced) => {
+          setShowWarning(false);
+          if (isSilenced) {
+            setSilencedLevel(warningLevel);
+            localStorage.setItem(
+              "silencedEnergyLevel",
+              warningLevel.toString(),
+            );
+          }
+        }}
         energyUsed={currentLoad}
         limit={dailyLimit}
         level={warningLevel}
@@ -186,6 +199,7 @@ const Tasks = () => {
           style={{
             backgroundColor: "rgba(0,0,0,0.6)",
             backdropFilter: "blur(4px)",
+            zIndex: 1060,
           }}
           onClick={() => setSelectedTask(null)}
         >
@@ -215,28 +229,26 @@ const Tasks = () => {
                   onClick={() => setSelectedTask(null)}
                 ></button>
               </div>
-              <div className="modal-body p-4">
+              <div className="modal-body p-4 text-dark">
                 {selectedTask.notes && (
                   <div className="mb-4">
                     <label className="small fw-bold text-muted text-uppercase ls-wide d-block mb-1">
                       Notes
                     </label>
                     <p
-                      className="bg-light p-3 rounded-3 text-dark mb-0"
+                      className="bg-light p-3 rounded-3 mb-0"
                       style={{ whiteSpace: "pre-wrap" }}
                     >
                       {selectedTask.notes}
                     </p>
                   </div>
                 )}
-                <div className="row g-3 text-dark">
+                <div className="row g-3">
                   <div className="col-6">
                     <label className="small fw-bold text-muted text-uppercase ls-wide d-block mb-1">
                       Urgency
                     </label>
-                    <span
-                      className={`badge rounded-pill px-3 py-2 bg-dark text-white`}
-                    >
+                    <span className="badge rounded-pill px-3 py-2 bg-dark text-white">
                       {selectedTask.urgency.toUpperCase()}
                     </span>
                   </div>
@@ -267,21 +279,20 @@ const Tasks = () => {
         </div>
       )}
 
+      {/* TODAY TAB */}
       {activeTab === "today" && (
         <div className="fade-in">
           {todayTasks.length > 0 ? (
             <div className="list-group list-group-flush shadow-sm rounded-4 overflow-hidden border">
-              {todayTasks
-                .filter((t) => t._id !== selectedTask?._id)
-                .map((t) => (
-                  <TaskItem
-                    key={t._id}
-                    task={t}
-                    setTasks={setTasks}
-                    showEnergyBar={showEnergyBar}
-                    onSelect={setSelectedTask}
-                  />
-                ))}
+              {todayTasks.map((t) => (
+                <TaskItem
+                  key={t._id}
+                  task={t}
+                  setTasks={setTasks}
+                  showEnergyBar={showEnergyBar}
+                  onSelect={setSelectedTask}
+                />
+              ))}
             </div>
           ) : (
             <div className="bg-white p-5 text-center rounded-4 shadow-sm border">
@@ -361,20 +372,27 @@ const Tasks = () => {
                 if (!showCompleted && t.isCompleted) return false;
                 return true;
               })
-              .filter((t) => t._id !== selectedTask?._id)
               .sort((a, b) => {
                 if (a.isCompleted !== b.isCompleted)
                   return a.isCompleted ? 1 : -1;
                 return new Date(b.createdAt) - new Date(a.createdAt);
               })
               .map((t) => (
-                <TaskItem
+                <div
                   key={t._id}
-                  task={t}
-                  setTasks={setTasks}
-                  showEnergyBar={showEnergyBar}
-                  onSelect={setSelectedTask}
-                />
+                  style={
+                    t.isCompleted
+                      ? { opacity: 0.6, filter: "grayscale(0.5)" }
+                      : {}
+                  }
+                >
+                  <TaskItem
+                    task={t}
+                    setTasks={setTasks}
+                    showEnergyBar={showEnergyBar}
+                    onSelect={setSelectedTask}
+                  />
+                </div>
               ))}
           </div>
         </div>
