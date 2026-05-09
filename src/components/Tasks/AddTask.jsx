@@ -8,7 +8,10 @@ const AddTask = ({ onTaskAdded, showEnergyBar }) => {
     urgency: "soon",
     dueDate: "",
     energyPoints: 0,
+    notes: "",
   });
+
+  const [showNotesField, setShowNotesField] = useState(false);
 
   const categoryWeights = {
     quickwin: 5,
@@ -62,7 +65,9 @@ const AddTask = ({ onTaskAdded, showEnergyBar }) => {
         urgency: "soon",
         dueDate: "",
         energyPoints: 0,
+        notes: "",
       });
+      setShowNotesField(false);
     } catch (err) {
       alert(err.response?.data?.message || "Check your input");
     }
@@ -70,7 +75,7 @@ const AddTask = ({ onTaskAdded, showEnergyBar }) => {
 
   return (
     <form onSubmit={handleSubmit} className="p-2 bg-white">
-      <div className="mb-4">
+      <div className="mb-3">
         <label className="small fw-bold text-muted text-uppercase ls-wide mb-2 d-block">
           Task Description
         </label>
@@ -82,6 +87,31 @@ const AddTask = ({ onTaskAdded, showEnergyBar }) => {
           required
         />
       </div>
+
+      {!showNotesField ? (
+        <button
+          type="button"
+          className="btn btn-link btn-sm text-decoration-none p-0 mb-3 text-muted fw-bold"
+          onClick={() => setShowNotesField(true)}
+        >
+          + Add notes/details
+        </button>
+      ) : (
+        <div className="mb-3 fade-in">
+          <label className="small fw-bold text-muted text-uppercase ls-wide mb-2 d-block">
+            Notes
+          </label>
+          <textarea
+            className="form-control border-0 bg-light rounded-3 shadow-none"
+            rows="3"
+            value={formData.notes}
+            onChange={(e) =>
+              setFormData({ ...formData, notes: e.target.value })
+            }
+            placeholder="Add extra context or sub-steps..."
+          />
+        </div>
+      )}
 
       <div className="row g-3">
         <div className="col-md-6">
@@ -99,7 +129,6 @@ const AddTask = ({ onTaskAdded, showEnergyBar }) => {
             <option value="" disabled>
               Select intensity...
             </option>
-            <option value="quickwin">Quick Win (5 pts)</option>
             <option value="admin">Admin / Emails (10 pts)</option>
             <option value="physical">Physical / Errands (20 pts)</option>
             <option value="social">Social / Meetings (30 pts)</option>
