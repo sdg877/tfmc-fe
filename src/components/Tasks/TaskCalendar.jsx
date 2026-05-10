@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const TaskCalendar = ({ tasks }) => {
+const TaskCalendar = ({ tasks, googleEvents = [] }) => {
   const [viewDate, setViewDate] = useState(new Date());
 
   const year = viewDate.getFullYear();
@@ -17,11 +17,19 @@ const TaskCalendar = ({ tasks }) => {
     .fill(null)
     .concat(Array.from({ length: daysInMonth }, (_, i) => i + 1));
 
-  const getTasksForDay = (day) => {
+  const getItemsForDay = (day, items, type) => {
     if (!day) return [];
-    return tasks.filter((t) => {
-      if (!t.dueDate) return false;
-      const d = new Date(t.dueDate);
+    return items.filter((item) => {
+      let dateVal;
+
+      if (type === "google") {
+        dateVal = item.start?.dateTime || item.start?.date;
+      } else {
+        dateVal = item.dueDate;
+      }
+
+      if (!dateVal) return false;
+      const d = new Date(dateVal);
       return (
         d.getDate() === day &&
         d.getMonth() === month &&
@@ -53,7 +61,6 @@ const TaskCalendar = ({ tasks }) => {
         </button>
       </div>
 
-      {/* Grid Layout */}
       <div
         className="d-grid"
         style={{
@@ -72,12 +79,14 @@ const TaskCalendar = ({ tasks }) => {
         ))}
 
         {calendarDays.map((day, idx) => {
-          const dayTasks = getTasksForDay(day);
+          const dayTasks = getItemsForDay(day, tasks, "task");
+          const dayEvents = getItemsForDay(day, googleEvents, "google");
+
           return (
             <div
               key={idx}
               className="bg-white p-1"
-              style={{ minHeight: "110px" }}
+              style={{ minHeight: "120px" }}
             >
               {day && (
                 <>
@@ -89,6 +98,22 @@ const TaskCalendar = ({ tasks }) => {
                     </span>
                   </div>
                   <div className="d-flex flex-column gap-1 mt-1">
+                    {dayEvents.map((event) => (
+                      <div
+                        key={event.id}
+                        className="border-start border-3 border-secondary bg-light text-dark px-1 py-1"
+                        style={{
+                          fontSize: "0.55rem",
+                          borderRadius: "2px",
+                          lineHeight: "1.1",
+                        }}
+                        title={event.summary}
+                      >
+                        <span className="me-1">🗓️</span>
+                        <strong>{event.summary}</strong>
+                      </div>
+                    ))}
+
                     {dayTasks.map((t) => (
                       <div
                         key={t._id}
