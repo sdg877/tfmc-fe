@@ -12,7 +12,7 @@ const EnergySlider = ({ initialValue, onUpdate }) => {
     setSaving(true);
     try {
       await axios.put(
-        `${baseURL}/users/profile`,
+        `${baseURL}/users/profile/energy`,
         { dailyEnergyLimit: Number(value) },
         { headers: { Authorization: `Bearer ${token}` } },
       );
