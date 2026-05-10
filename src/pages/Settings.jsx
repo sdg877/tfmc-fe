@@ -1,33 +1,9 @@
 import React from "react";
-import { useGoogleLogin } from "@react-oauth/google";
-import axios from "axios";
 import EnergySlider from "../components/Energy/EnergySlider";
 import EnergyToggle from "../components/Energy/EnergyToggle";
+import GoogleConnect from "../components/Auth/GoogleConnect";
 
 const Settings = ({ user, setUser }) => {
-  const token = localStorage.getItem("token");
-  const baseURL = import.meta.env.VITE_API_URL;
-
-  const handleGoogleSync = useGoogleLogin({
-    onSuccess: async (codeResponse) => {
-      try {
-        const res = await axios.post(
-          `${baseURL}/users/sync-calendar`,
-          { code: codeResponse.code },
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-        setUser(res.data);
-        alert("Google Calendar connected!");
-      } catch (err) {
-        console.error("Google Sync Error:", err);
-      }
-    },
-    flow: "auth-code",
-    ux_mode: "redirect",
-    redirect_uri: window.location.origin,
-    scope: "https://www.googleapis.com/auth/calendar.readonly",
-  });
-
   if (!user) return <div className="p-5 text-center">Loading...</div>;
 
   return (
@@ -77,15 +53,10 @@ const Settings = ({ user, setUser }) => {
                   : "View your external events alongside your tasks."}
               </p>
             </div>
-            <button
-              onClick={() => handleGoogleSync()}
-              className={`btn rounded-pill px-4 fw-bold ${
-                user?.googleConnected ? "btn-secondary opacity-50" : "btn-dark"
-              }`}
-              disabled={user?.googleConnected}
-            >
-              {user?.googleConnected ? "Connected" : "Connect"}
-            </button>
+            <GoogleConnect
+              isConnected={user?.googleConnected}
+              onSyncSuccess={(updatedUser) => setUser(updatedUser)}
+            />
           </div>
         </div>
       </section>
