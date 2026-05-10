@@ -47,9 +47,12 @@ function App() {
             <Route path="/login" element={<Auth setUser={setUser} />} />
             <Route path="/signup" element={<Auth setUser={setUser} />} />
             <Route path="/tasks" element={<Tasks user={user} />} />
-            <Route path="/profile" element={<Profile user={user} />} />
             <Route path="/calendar" element={<Calendar user={user} />} />
             <Route path="/progress" element={<Progress user={user} />} />
+            <Route
+              path="/profile"
+              element={<Profile user={user} setUser={setUser} />}
+            />
             <Route
               path="/settings"
               element={<Settings user={user} setUser={setUser} />}
