@@ -15,24 +15,38 @@ const GoogleConnect = ({ isConnected, onSyncSuccess }) => {
           { headers: { Authorization: `Bearer ${token}` } },
         );
         onSyncSuccess(res.data);
-        alert("Google Calendar connected with full permissions!");
       } catch (err) {
         console.error("Google Sync Error:", err);
       }
     },
     flow: "auth-code",
-    ux_mode: "popup",
-    scope: "https://www.googleapis.com/auth/calendar",
+    scope: "https://www.googleapis.com/auth/calendar.events",
   });
+
+  const handleDisconnect = async () => {
+    if (window.confirm("Disconnect your Google Calendar?")) {
+      try {
+        const res = await axios.post(
+          `${baseURL}/users/calendar/disconnect`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        onSyncSuccess(res.data.user || res.data);
+      } catch (err) {
+        console.error("Disconnect Error:", err);
+      }
+    }
+  };
 
   return (
     <button
-      onClick={() => login()}
-      className={`btn rounded-pill px-4 fw-bold ${
-        isConnected ? "btn-outline-danger" : "btn-dark"
+      onClick={isConnected ? handleDisconnect : () => login()}
+      className={`btn rounded-pill px-4 fw-bold shadow-sm ${
+        isConnected ? "btn-outline-secondary" : "btn-dark"
       }`}
+      style={{ minWidth: "120px" }}
     >
-      {isConnected ? "Reconnect Google" : "Connect Google"}
+      {isConnected ? "Disconnect" : "Connect Google"}
     </button>
   );
 };
