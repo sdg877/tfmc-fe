@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import AuthForm from "../components/Auth/AuthForm";
 
-const Auth = () => {
+const Auth = ({ setUser }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const isSignup = location.pathname === "/signup";
@@ -16,13 +16,14 @@ const Auth = () => {
 
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
+        setUser(response.data);
         navigate("/profile");
       }
     } catch (err) {
       console.error("Auth Error:", err.response?.data || err.message);
-      alert(
-        err.response?.data?.msg || "Authentication failed. Check your details.",
-      );
+      const errorMsg =
+        err.response?.data?.msg || "Authentication failed. Check your details.";
+      alert(errorMsg);
     }
   };
 
