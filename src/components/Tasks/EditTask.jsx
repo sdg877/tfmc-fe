@@ -17,10 +17,28 @@ const EditTask = ({ task, setTasks, setIsEditing }) => {
       const res = await axios.put(`${baseURL}/tasks/${task._id}`, editData, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (task.googleEventId) {
+        const start = new Date(`${editData.dueDate}T09:00`);
+        const end = new Date(start.getTime() + 30 * 60000);
+
+        await axios.put(
+          `${baseURL}/users/calendar/update`,
+          {
+            eventId: task.googleEventId,
+            title: editData.title,
+            startTime: start.toISOString(),
+            endTime: end.toISOString(),
+          },
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+      }
+
       setTasks((prev) => prev.map((t) => (t._id === task._id ? res.data : t)));
       setIsEditing(false);
     } catch (err) {
       console.error("Update failed", err);
+      alert("Saved to app, but failed to sync with Google Calendar.");
     }
   };
 
