@@ -139,7 +139,7 @@ const Home = () => {
         </p>
         <div className="d-flex gap-3 justify-content-center">
           <Link
-            to="/register"
+            to="/signup"
             className="btn btn-dark btn-lg rounded-pill px-5 fw-bold shadow"
           >
             Join Now
