@@ -42,6 +42,7 @@ const Tasks = () => {
   const [tasks, setTasks] = useState([]);
   const [user, setUser] = useState(null);
   const [dailyLimit, setDailyLimit] = useState(100);
+  const [googleDrain, setGoogleDrain] = useState(0); // For Google Calendar sync
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("today");
   const [filter, setFilter] = useState({
@@ -62,9 +63,11 @@ const Tasks = () => {
   const baseURL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
 
-  const calculateLoad = (taskList = []) => {
-    if (!taskList || taskList.length === 0) return 0;
-    const today = new Date().toLocaleDateString("en-GB");
+  const calculateLoad = (taskList = [], calendarDrain = 0) => {
+    if (!taskList || taskList.length === 0) return Number(calendarDrain);
+
+    const todayString = new Date().toLocaleDateString("en-GB");
+
     const weights = {
       admin: 10,
       physical: 20,
@@ -73,37 +76,59 @@ const Tasks = () => {
       stress: 45,
     };
 
-    const todaysTasks = taskList.filter((t) => {
-      const isPlanned = t.isPlannedForToday === true;
-      const isDueToday =
-        t.dueDate && new Date(t.dueDate).toLocaleDateString("en-GB") === today;
-      const completedToday =
+    const totalPoints = taskList.reduce((total, t) => {
+      const isCompletedToday =
         t.isCompleted &&
         t.updatedAt &&
-        new Date(t.updatedAt).toLocaleDateString("en-GB") === today;
-      return isPlanned || isDueToday || completedToday;
-    });
+        new Date(t.updatedAt).toLocaleDateString("en-GB") === todayString;
+      const isPlanned = t.isPlannedForToday === true;
+      const isDueToday =
+        t.dueDate &&
+        new Date(t.dueDate).toLocaleDateString("en-GB") === todayString;
 
-    return todaysTasks.reduce(
-      (total, t) => total + (weights[t.category] || 10),
-      0,
-    );
+      if (isCompletedToday || isPlanned || isDueToday) {
+        const taskWeight = Number(weights[t.category]) || 10;
+        return total + taskWeight;
+      }
+      return total;
+    }, 0);
+
+    return totalPoints + Number(calendarDrain);
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // 1. Fetch Tasks
         const resTasks = await axios.get(`${baseURL}/tasks`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTasks(resTasks.data);
+
+        // 2. Fetch User Profile
         const resUser = await axios.get(`${baseURL}/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         if (resUser.data) {
           setUser(resUser.data);
           setDailyLimit(Number(resUser.data.dailyEnergyLimit) || 100);
           setShowEnergyBar(resUser.data.settings?.showEnergyBar ?? true);
+
+          // 3. Fetch Google Drain if connected
+          if (resUser.data.googleConnected) {
+            try {
+              const resEnergy = await axios.get(
+                `${baseURL}/users/energy-usage`,
+                {
+                  headers: { Authorization: `Bearer ${token}` },
+                },
+              );
+              setGoogleDrain(resEnergy.data.googleEnergyDrain || 0);
+            } catch (err) {
+              console.error("Google Energy fetch failed", err);
+            }
+          }
         }
       } catch (err) {
         console.error(err);
@@ -115,14 +140,14 @@ const Tasks = () => {
   }, [baseURL, token]);
 
   useEffect(() => {
-    const newLoad = calculateLoad(tasks);
+    const newLoad = calculateLoad(tasks, googleDrain);
     setCurrentLoad(newLoad);
 
     if (showEnergyBar) {
       let reachedLevel = 0;
-      if (newLoad >= 100) reachedLevel = 100;
-      else if (newLoad >= 90) reachedLevel = 90;
-      else if (newLoad >= 80) reachedLevel = 80;
+      if (newLoad >= dailyLimit) reachedLevel = 100;
+      else if (newLoad >= dailyLimit * 0.9) reachedLevel = 90;
+      else if (newLoad >= dailyLimit * 0.8) reachedLevel = 80;
 
       if (reachedLevel > 0 && reachedLevel > silencedLevel) {
         setWarningLevel(reachedLevel);
@@ -130,7 +155,7 @@ const Tasks = () => {
         setFilter((prev) => ({ ...prev, hideNonUrgent: true }));
       }
     }
-  }, [tasks, showEnergyBar, silencedLevel]);
+  }, [tasks, googleDrain, showEnergyBar, silencedLevel, dailyLimit]);
 
   const handleTaskAdded = (newTask) => {
     setTasks([newTask, ...tasks]);
@@ -173,7 +198,11 @@ const Tasks = () => {
       </ul>
 
       {showEnergyBar && activeTab !== "add" && (
-        <EnergyProgress tasks={tasks} dailyLimit={dailyLimit} />
+        <EnergyProgress
+          tasks={tasks}
+          dailyLimit={dailyLimit}
+          googleDrain={googleDrain}
+        />
       )}
 
       <EnergyWarningModal
@@ -193,6 +222,7 @@ const Tasks = () => {
         level={warningLevel}
       />
 
+      {/* Task Detail Modal */}
       {selectedTask && (
         <div
           className="modal fade show d-block"
@@ -279,7 +309,6 @@ const Tasks = () => {
         </div>
       )}
 
-      {/* TODAY TAB */}
       {activeTab === "today" && (
         <div className="fade-in">
           {todayTasks.length > 0 ? (
@@ -310,6 +339,7 @@ const Tasks = () => {
         </div>
       )}
 
+      {/* ALL TASKS TAB */}
       {activeTab === "all" && (
         <div className="fade-in">
           <div className="d-flex justify-content-between align-items-center mb-3 px-1">
@@ -403,6 +433,7 @@ const Tasks = () => {
           <AddTask
             onTaskAdded={handleTaskAdded}
             showEnergyBar={showEnergyBar}
+            user={user}
           />
         </div>
       )}
