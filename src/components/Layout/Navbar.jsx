@@ -4,12 +4,23 @@ import Logout from "./Logout";
 const Navbar = () => {
   const token = localStorage.getItem("token");
   const location = useLocation();
+  const isHome = location.pathname === "/";
 
   return (
     <nav className="navbar navbar-dark bg-dark px-4 shadow-sm">
-      <Link className="navbar-brand fw-bold" to="/">
-        The Fast Minds Club
-      </Link>
+      <div className="position-relative">
+        {isHome ? (
+          <span className="navbar-brand fw-bold mb-0">The Fast Minds Club</span>
+        ) : (
+          <Link
+            className="navbar-brand fw-bold brand-link"
+            to="/"
+            data-hover="Go to Overview"
+          >
+            The Fast Minds Club
+          </Link>
+        )}
+      </div>
 
       <div className="navbar-nav ms-auto d-flex flex-row align-items-center">
         {token ? (
@@ -41,7 +52,6 @@ const Navbar = () => {
                 >
                   Settings
                 </Link>
-
                 <div className="dropdown-logout-wrapper">
                   <Logout />
                 </div>
@@ -49,8 +59,8 @@ const Navbar = () => {
             </div>
           </>
         ) : (
-          location.pathname !== "/login" &&
-          location.pathname !== "/" && (
+          !isHome &&
+          location.pathname !== "/login" && (
             <Link className="nav-link" to="/login">
               Login
             </Link>
@@ -59,9 +69,28 @@ const Navbar = () => {
       </div>
 
       <style>{`
-        .dropdown-hover:hover .dropdown-content {
-          display: block;
+        .brand-link {
+          position: relative;
+          text-decoration: none;
         }
+
+        .brand-link:hover::after {
+          content: attr(data-hover);
+          position: absolute;
+          left: 50%;
+          bottom: -30px;
+          transform: translateX(-50%);
+          background-color: #444;
+          color: #fff;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 0.7rem;
+          white-space: nowrap;
+          z-index: 1001;
+          pointer-events: none;
+        }
+
+        .dropdown-hover:hover .dropdown-content { display: block; }
         .dropdown-content {
           display: none;
           position: absolute;
@@ -70,11 +99,7 @@ const Navbar = () => {
           z-index: 1000;
           top: 100%;
         }
-        .dropdown-content .nav-link:hover {
-          background-color: #343a40;
-          color: white !important;
-        }
-        /* Style the wrapper to ensure your Logout component matches the padding */
+        .dropdown-content .nav-link:hover { background-color: #343a40; color: white !important; }
         .dropdown-logout-wrapper .nav-link, 
         .dropdown-logout-wrapper button {
           padding: 8px 16px !important;
@@ -85,8 +110,11 @@ const Navbar = () => {
           color: #ff4d4d !important;
           font-weight: bold;
         }
-        .dropdown-logout-wrapper:hover {
-          background-color: #343a40;
+        .dropdown-logout-wrapper:hover { background-color: #343a40; }
+        
+        a.navbar-brand:hover {
+          color: #fff !important;
+          opacity: 0.8;
         }
       `}</style>
     </nav>
