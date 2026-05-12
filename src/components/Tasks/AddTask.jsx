@@ -2,6 +2,13 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 const AddTask = ({ onTaskAdded, user }) => {
+  const getNextWholeHour = () => {
+    const now = new Date();
+    now.setHours(now.getHours() + 1);
+    now.setMinutes(0);
+    return now.toTimeString().slice(0, 5);
+  };
+
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -41,11 +48,13 @@ const AddTask = ({ onTaskAdded, user }) => {
         setFormData((prev) => ({ ...prev, urgency: "later" }));
       }
 
-      if (!eventTime) {
-        setEventTime(`${formData.dueDate}T09:00`);
-      }
+      const currentTimePart = eventTime.includes("T")
+        ? eventTime.split("T")[1]
+        : getNextWholeHour();
+
+      setEventTime(`${formData.dueDate}T${currentTimePart}`);
     }
-  }, [formData.dueDate, eventTime]);
+  }, [formData.dueDate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,7 +63,6 @@ const AddTask = ({ onTaskAdded, user }) => {
 
     const start = new Date(eventTime);
     const end = new Date(start.getTime() + duration * 60000);
-
     const taskCost = getSelectedCategoryWeight();
 
     try {
@@ -227,14 +235,8 @@ const AddTask = ({ onTaskAdded, user }) => {
           </label>
         </div>
 
-        {!isGoogleLinked && (
-          <p className="extra-small text-danger mb-0 fw-bold">
-            Reconnect in Settings to use calendar sync.
-          </p>
-        )}
-
         {syncToGoogle && isGoogleLinked && (
-          <div className="mt-2 row g-2 animate-fade-in">
+          <div className="mt-2 row g-2">
             <div className="col-8">
               <label className="small fw-bold text-muted text-uppercase ls-wide mb-1 d-block">
                 Start Time
@@ -260,7 +262,6 @@ const AddTask = ({ onTaskAdded, user }) => {
                 <option value={30}>30m</option>
                 <option value={45}>45m</option>
                 <option value={60}>1h</option>
-                <option value={90}>1.5h</option>
                 <option value={120}>2h</option>
               </select>
             </div>
