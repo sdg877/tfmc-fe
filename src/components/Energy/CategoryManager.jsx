@@ -16,6 +16,11 @@ const CategoryManager = ({ user, onUpdate }) => {
     { bg: "#e3f2fd", text: "#1565c0", border: "#90caf9" },
     { bg: "#fff3e0", text: "#e65100", border: "#ffcc80" },
     { bg: "#fce4ec", text: "#c2185b", border: "#f48fb1" },
+    { bg: "#f1f8e9", text: "#558b2f", border: "#c5e1a5" },
+    { bg: "#e0f7fa", text: "#00838f", border: "#b2ebf2" },
+    { bg: "#fff9c4", text: "#fbc02d", border: "#fff59d" },
+    { bg: "#efebe9", text: "#4e342e", border: "#d7ccc8" },
+    { bg: "#ede7f6", text: "#4527a0", border: "#d1c4e9" },
   ];
 
   const getStyle = (index) => pastelPalette[index % pastelPalette.length];
