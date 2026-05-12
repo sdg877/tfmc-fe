@@ -3,40 +3,53 @@ import axios from "axios";
 import DeleteTask from "./DeleteTask";
 import EditTask from "./EditTask";
 
-const categoryStyles = {
-  admin: {
-    backgroundColor: "#f3e5f5",
-    color: "#7b1fa2",
-    border: "1px solid #ce93d8",
-  },
-  physical: {
-    backgroundColor: "#e8f5e9",
-    color: "#2e7d32",
-    border: "1px solid #a5d6a7",
-  },
-  social: {
-    backgroundColor: "#e3f2fd",
-    color: "#1565c0",
-    border: "1px solid #90caf9",
-  },
-  focus: {
-    backgroundColor: "#fff3e0",
-    color: "#e65100",
-    border: "1px solid #ffcc80",
-  },
-  stress: {
-    backgroundColor: "#fce4ec",
-    color: "#c2185b",
-    border: "1px solid #f48fb1",
-  },
-  default: {
-    backgroundColor: "#f5f5f5",
-    color: "#757575",
-    border: "1px solid #e0e0e0",
-  },
-};
+// const categoryStyles = {
+//   admin: {
+//     backgroundColor: "#f3e5f5",
+//     color: "#7b1fa2",
+//     border: "1px solid #ce93d8",
+//   },
+//   physical: {
+//     backgroundColor: "#e8f5e9",
+//     color: "#2e7d32",
+//     border: "1px solid #a5d6a7",
+//   },
+//   social: {
+//     backgroundColor: "#e3f2fd",
+//     color: "#1565c0",
+//     border: "1px solid #90caf9",
+//   },
+//   focus: {
+//     backgroundColor: "#fff3e0",
+//     color: "#e65100",
+//     border: "1px solid #ffcc80",
+//   },
+//   stress: {
+//     backgroundColor: "#fce4ec",
+//     color: "#c2185b",
+//     border: "1px solid #f48fb1",
+//   },
+//   default: {
+//     backgroundColor: "#f5f5f5",
+//     color: "#757575",
+//     border: "1px solid #e0e0e0",
+//   },
+// };
 
-const TaskItem = ({ task, setTasks, onSelect }) => {
+const pastelPalette = [
+  { bg: "#f3e5f5", text: "#7b1fa2", border: "#ce93d8" },
+  { bg: "#e8f5e9", text: "#2e7d32", border: "#a5d6a7" },
+  { bg: "#e3f2fd", text: "#1565c0", border: "#90caf9" },
+  { bg: "#fff3e0", text: "#e65100", border: "#ffcc80" },
+  { bg: "#fce4ec", text: "#c2185b", border: "#f48fb1" },
+  { bg: "#f1f8e9", text: "#558b2f", border: "#c5e1a5" },
+  { bg: "#e0f7fa", text: "#00838f", border: "#b2ebf2" },
+  { bg: "#fff9c4", text: "#fbc02d", border: "#fff59d" },
+  { bg: "#efebe9", text: "#4e342e", border: "#d7ccc8" },
+  { bg: "#ede7f6", text: "#4527a0", border: "#d1c4e9" },
+];
+
+const TaskItem = ({ task, setTasks, onSelect, user }) => {
   const [isEditing, setIsEditing] = useState(false);
   const token = localStorage.getItem("token");
   const baseURL = import.meta.env.VITE_API_URL;
@@ -54,6 +67,38 @@ const TaskItem = ({ task, setTasks, onSelect }) => {
       console.error("Toggle failed", err);
     }
   };
+
+  const getStyle = () => {
+    if (!user || !user.categories) {
+      return {
+        backgroundColor: "#f8f9fa",
+        color: "#6c757d",
+        border: "1px solid #dee2e6",
+      };
+    }
+
+    const index = user.categories.findIndex(
+      (c) => c.name.toLowerCase() === task.category?.toLowerCase(),
+    );
+
+    const styleIndex = index !== -1 ? index : 0;
+    const colors = pastelPalette[styleIndex % pastelPalette.length];
+
+    if (!colors) {
+      return {
+        backgroundColor: "#f8f9fa",
+        color: "#6c757d",
+        border: "1px solid #dee2e6",
+      };
+    }
+
+    return {
+      backgroundColor: colors.bg,
+      color: colors.text,
+      border: `1px solid ${colors.border}`,
+    };
+  };
+  const currentStyle = getStyle();
 
   const syncToGoogle = async (e) => {
     e.stopPropagation();
@@ -138,8 +183,8 @@ const TaskItem = ({ task, setTasks, onSelect }) => {
             {task.title}
           </h6>
           <span
-            className="badge small border-0"
-            style={categoryStyles[task.category] || categoryStyles.default}
+            className="badge small border-0 text-capitalize"
+            style={currentStyle}
           >
             {task.category}
           </span>

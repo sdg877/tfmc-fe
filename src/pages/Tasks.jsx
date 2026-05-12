@@ -5,38 +5,51 @@ import TaskItem from "../components/Tasks/TaskItem";
 import EnergyProgress from "../components/Energy/EnergyProgress";
 import EnergyWarningModal from "../components/Energy/EnergyWarningModal";
 
-const categoryStyles = {
-  admin: {
-    backgroundColor: "#f3e5f5",
-    color: "#7b1fa2",
-    border: "1px solid #ce93d8",
-  },
-  physical: {
-    backgroundColor: "#e8f5e9",
-    color: "#2e7d32",
-    border: "1px solid #a5d6a7",
-  },
-  social: {
-    backgroundColor: "#e3f2fd",
-    color: "#1565c0",
-    border: "1px solid #90caf9",
-  },
-  focus: {
-    backgroundColor: "#fff3e0",
-    color: "#e65100",
-    border: "1px solid #ffcc80",
-  },
-  stress: {
-    backgroundColor: "#fce4ec",
-    color: "#c2185b",
-    border: "1px solid #f48fb1",
-  },
-  default: {
-    backgroundColor: "#f5f5f5",
-    color: "#757575",
-    border: "1px solid #e0e0e0",
-  },
-};
+// const categoryStyles = {
+//   admin: {
+//     backgroundColor: "#f3e5f5",
+//     color: "#7b1fa2",
+//     border: "1px solid #ce93d8",
+//   },
+//   physical: {
+//     backgroundColor: "#e8f5e9",
+//     color: "#2e7d32",
+//     border: "1px solid #a5d6a7",
+//   },
+//   social: {
+//     backgroundColor: "#e3f2fd",
+//     color: "#1565c0",
+//     border: "1px solid #90caf9",
+//   },
+//   focus: {
+//     backgroundColor: "#fff3e0",
+//     color: "#e65100",
+//     border: "1px solid #ffcc80",
+//   },
+//   stress: {
+//     backgroundColor: "#fce4ec",
+//     color: "#c2185b",
+//     border: "1px solid #f48fb1",
+//   },
+//   default: {
+//     backgroundColor: "#f5f5f5",
+//     color: "#757575",
+//     border: "1px solid #e0e0e0",
+//   },
+// };
+
+const pastelPalette = [
+  { bg: "#f3e5f5", text: "#7b1fa2", border: "#ce93d8" },
+  { bg: "#e8f5e9", text: "#2e7d32", border: "#a5d6a7" },
+  { bg: "#e3f2fd", text: "#1565c0", border: "#90caf9" },
+  { bg: "#fff3e0", text: "#e65100", border: "#ffcc80" },
+  { bg: "#fce4ec", text: "#c2185b", border: "#f48fb1" },
+  { bg: "#f1f8e9", text: "#558b2f", border: "#c5e1a5" },
+  { bg: "#e0f7fa", text: "#00838f", border: "#b2ebf2" },
+  { bg: "#fff9c4", text: "#fbc02d", border: "#fff59d" },
+  { bg: "#efebe9", text: "#4e342e", border: "#d7ccc8" },
+  { bg: "#ede7f6", text: "#4527a0", border: "#d1c4e9" },
+];
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
@@ -63,37 +76,82 @@ const Tasks = () => {
   const baseURL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
 
+  // const calculateLoad = (taskList = [], calendarDrain = 0) => {
+  //   if (!taskList || taskList.length === 0) return Number(calendarDrain);
+
+  //   const todayString = new Date().toLocaleDateString("en-GB");
+
+  //   const weights = {
+  //     admin: 10,
+  //     physical: 20,
+  //     social: 30,
+  //     focus: 40,
+  //     stress: 45,
+  //   };
+
+  //   const totalPoints = taskList.reduce((total, t) => {
+  //     const isCompletedToday =
+  //       t.isCompleted &&
+  //       t.updatedAt &&
+  //       new Date(t.updatedAt).toLocaleDateString("en-GB") === todayString;
+  //     const isPlanned = t.isPlannedForToday === true;
+  //     const isDueToday =
+  //       t.dueDate &&
+  //       new Date(t.dueDate).toLocaleDateString("en-GB") === todayString;
+
+  //     if (isCompletedToday || isPlanned || isDueToday) {
+  //       const taskWeight = Number(weights[t.category]) || 10;
+  //       return total + taskWeight;
+  //     }
+  //     return total;
+  //   }, 0);
+
+  //   return totalPoints + Number(calendarDrain);
+  // };
+
   const calculateLoad = (taskList = [], calendarDrain = 0) => {
     if (!taskList || taskList.length === 0) return Number(calendarDrain);
-
     const todayString = new Date().toLocaleDateString("en-GB");
 
-    const weights = {
-      admin: 10,
-      physical: 20,
-      social: 30,
-      focus: 40,
-      stress: 45,
-    };
-
     const totalPoints = taskList.reduce((total, t) => {
-      const isCompletedToday =
-        t.isCompleted &&
-        t.updatedAt &&
-        new Date(t.updatedAt).toLocaleDateString("en-GB") === todayString;
-      const isPlanned = t.isPlannedForToday === true;
-      const isDueToday =
-        t.dueDate &&
-        new Date(t.dueDate).toLocaleDateString("en-GB") === todayString;
+      const isRelevant =
+        (t.isCompleted &&
+          t.updatedAt &&
+          new Date(t.updatedAt).toLocaleDateString("en-GB") === todayString) ||
+        t.isPlannedForToday ||
+        (t.dueDate &&
+          new Date(t.dueDate).toLocaleDateString("en-GB") === todayString);
 
-      if (isCompletedToday || isPlanned || isDueToday) {
-        const taskWeight = Number(weights[t.category]) || 10;
-        return total + taskWeight;
+      if (isRelevant) {
+        // Find weight from user's custom categories
+        const catSettings = user?.categories?.find(
+          (c) => c.name.toLowerCase() === t.category?.toLowerCase(),
+        );
+        return total + (catSettings?.weight || 10);
       }
       return total;
     }, 0);
 
     return totalPoints + Number(calendarDrain);
+  };
+
+  const getCategoryStyle = (catName) => {
+    if (!user?.categories)
+      return {
+        backgroundColor: "#f5f5f5",
+        color: "#757575",
+        border: "1px solid #e0e0e0",
+      };
+    const index = user.categories.findIndex(
+      (c) => c.name.toLowerCase() === catName?.toLowerCase(),
+    );
+    const styleIndex = index !== -1 ? index : 0;
+    const colors = pastelPalette[styleIndex % pastelPalette.length];
+    return {
+      backgroundColor: colors.bg,
+      color: colors.text,
+      border: `1px solid ${colors.border}`,
+    };
   };
 
   useEffect(() => {
@@ -344,7 +402,7 @@ const Tasks = () => {
         <div className="fade-in">
           <div className="d-flex justify-content-between align-items-center mb-3 px-1">
             <div className="d-flex gap-2 align-items-center">
-              <select
+              {/* <select
                 className="form-select form-select-sm w-auto border-0 bg-light fw-bold rounded-pill px-3 shadow-sm"
                 value={filter.category}
                 onChange={(e) =>
@@ -357,6 +415,20 @@ const Tasks = () => {
                 <option value="physical">Physical</option>
                 <option value="social">Social</option>
                 <option value="stress">High Stress</option>
+              </select> */}
+              <select
+                className="form-select form-select-sm w-auto border-0 bg-light fw-bold rounded-pill px-3 shadow-sm"
+                value={filter.category}
+                onChange={(e) =>
+                  setFilter({ ...filter, category: e.target.value })
+                }
+              >
+                <option value="all">All Categories</option>
+                {user?.categories?.map((cat) => (
+                  <option key={cat._id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
               </select>
               <div className="form-check form-switch small ms-2">
                 <input
@@ -417,9 +489,10 @@ const Tasks = () => {
                   }
                 >
                   <TaskItem
+                    key={t._id}
                     task={t}
+                    user={user}
                     setTasks={setTasks}
-                    showEnergyBar={showEnergyBar}
                     onSelect={setSelectedTask}
                   />
                 </div>

@@ -18,12 +18,9 @@ const AddTask = ({ onTaskAdded, user }) => {
 
   const isGoogleLinked = user?.googleConnected;
 
-  const categoryWeights = {
-    admin: 10,
-    physical: 20,
-    social: 30,
-    focus: 40,
-    stress: 45,
+  const getSelectedCategoryWeight = () => {
+    const found = user?.categories?.find((c) => c.name === formData.category);
+    return found ? found.weight : 0;
   };
 
   useEffect(() => {
@@ -57,7 +54,8 @@ const AddTask = ({ onTaskAdded, user }) => {
 
     const start = new Date(eventTime);
     const end = new Date(start.getTime() + duration * 60000);
-    const taskCost = categoryWeights[formData.category] || 10;
+
+    const taskCost = getSelectedCategoryWeight();
 
     try {
       const taskRes = await axios.post(
@@ -111,7 +109,7 @@ const AddTask = ({ onTaskAdded, user }) => {
     }
   };
 
-  const taskCost = categoryWeights[formData.category] || 0;
+  const taskCost = getSelectedCategoryWeight();
   const remainingEnergy = (user?.dailyEnergyLimit || 100) - taskCost;
 
   return (
@@ -135,7 +133,7 @@ const AddTask = ({ onTaskAdded, user }) => {
             Category
           </label>
           <select
-            className="form-select border-0 bg-light py-2 shadow-none"
+            className="form-select border-0 bg-light py-2 shadow-none text-capitalize"
             value={formData.category}
             onChange={(e) =>
               setFormData({ ...formData, category: e.target.value })
@@ -145,11 +143,11 @@ const AddTask = ({ onTaskAdded, user }) => {
             <option value="" disabled>
               Select intensity...
             </option>
-            <option value="admin">Admin / Emails (10 pts)</option>
-            <option value="physical">Physical / Errands (20 pts)</option>
-            <option value="social">Social / Meetings (30 pts)</option>
-            <option value="focus">Deep Focus (40 pts)</option>
-            <option value="stress">High Stress (45 pts)</option>
+            {user?.categories?.map((cat) => (
+              <option key={cat._id} value={cat.name}>
+                {cat.name} ({cat.weight} pts)
+              </option>
+            ))}
           </select>
         </div>
 
