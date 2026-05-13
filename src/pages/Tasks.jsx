@@ -5,39 +5,6 @@ import TaskItem from "../components/Tasks/TaskItem";
 import EnergyProgress from "../components/Energy/EnergyProgress";
 import EnergyWarningModal from "../components/Energy/EnergyWarningModal";
 
-// const categoryStyles = {
-//   admin: {
-//     backgroundColor: "#f3e5f5",
-//     color: "#7b1fa2",
-//     border: "1px solid #ce93d8",
-//   },
-//   physical: {
-//     backgroundColor: "#e8f5e9",
-//     color: "#2e7d32",
-//     border: "1px solid #a5d6a7",
-//   },
-//   social: {
-//     backgroundColor: "#e3f2fd",
-//     color: "#1565c0",
-//     border: "1px solid #90caf9",
-//   },
-//   focus: {
-//     backgroundColor: "#fff3e0",
-//     color: "#e65100",
-//     border: "1px solid #ffcc80",
-//   },
-//   stress: {
-//     backgroundColor: "#fce4ec",
-//     color: "#c2185b",
-//     border: "1px solid #f48fb1",
-//   },
-//   default: {
-//     backgroundColor: "#f5f5f5",
-//     color: "#757575",
-//     border: "1px solid #e0e0e0",
-//   },
-// };
-
 const pastelPalette = [
   { bg: "#f3e5f5", text: "#7b1fa2", border: "#ce93d8" },
   { bg: "#e8f5e9", text: "#2e7d32", border: "#a5d6a7" },
@@ -55,7 +22,7 @@ const Tasks = () => {
   const [tasks, setTasks] = useState([]);
   const [user, setUser] = useState(null);
   const [dailyLimit, setDailyLimit] = useState(100);
-  const [googleDrain, setGoogleDrain] = useState(0); // For Google Calendar sync
+  const [googleDrain, setGoogleDrain] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("today");
   const [filter, setFilter] = useState({
@@ -76,39 +43,6 @@ const Tasks = () => {
   const baseURL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
 
-  // const calculateLoad = (taskList = [], calendarDrain = 0) => {
-  //   if (!taskList || taskList.length === 0) return Number(calendarDrain);
-
-  //   const todayString = new Date().toLocaleDateString("en-GB");
-
-  //   const weights = {
-  //     admin: 10,
-  //     physical: 20,
-  //     social: 30,
-  //     focus: 40,
-  //     stress: 45,
-  //   };
-
-  //   const totalPoints = taskList.reduce((total, t) => {
-  //     const isCompletedToday =
-  //       t.isCompleted &&
-  //       t.updatedAt &&
-  //       new Date(t.updatedAt).toLocaleDateString("en-GB") === todayString;
-  //     const isPlanned = t.isPlannedForToday === true;
-  //     const isDueToday =
-  //       t.dueDate &&
-  //       new Date(t.dueDate).toLocaleDateString("en-GB") === todayString;
-
-  //     if (isCompletedToday || isPlanned || isDueToday) {
-  //       const taskWeight = Number(weights[t.category]) || 10;
-  //       return total + taskWeight;
-  //     }
-  //     return total;
-  //   }, 0);
-
-  //   return totalPoints + Number(calendarDrain);
-  // };
-
   const calculateLoad = (taskList = [], calendarDrain = 0) => {
     if (!taskList || taskList.length === 0) return Number(calendarDrain);
     const todayString = new Date().toLocaleDateString("en-GB");
@@ -123,7 +57,6 @@ const Tasks = () => {
           new Date(t.dueDate).toLocaleDateString("en-GB") === todayString);
 
       if (isRelevant) {
-        // Find weight from user's custom categories
         const catSettings = user?.categories?.find(
           (c) => c.name.toLowerCase() === t.category?.toLowerCase(),
         );
@@ -157,13 +90,11 @@ const Tasks = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Fetch Tasks
         const resTasks = await axios.get(`${baseURL}/tasks`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTasks(resTasks.data);
 
-        // 2. Fetch User Profile
         const resUser = await axios.get(`${baseURL}/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -173,7 +104,6 @@ const Tasks = () => {
           setDailyLimit(Number(resUser.data.dailyEnergyLimit) || 100);
           setShowEnergyBar(resUser.data.settings?.showEnergyBar ?? true);
 
-          // 3. Fetch Google Drain if connected
           if (resUser.data.googleConnected) {
             try {
               const resEnergy = await axios.get(
@@ -280,7 +210,7 @@ const Tasks = () => {
         level={warningLevel}
       />
 
-      {/* Task Detail Modal */}
+      {/* Task Detail Modal - FIX IMPLEMENTED HERE */}
       {selectedTask && (
         <div
           className="modal fade show d-block"
@@ -300,10 +230,7 @@ const Tasks = () => {
                 <div>
                   <span
                     className="badge mb-2 text-uppercase"
-                    style={
-                      categoryStyles[selectedTask.category] ||
-                      categoryStyles.default
-                    }
+                    style={getCategoryStyle(selectedTask.category)} // Using getCategoryStyle now
                   >
                     {selectedTask.category}
                   </span>
@@ -397,25 +324,10 @@ const Tasks = () => {
         </div>
       )}
 
-      {/* ALL TASKS TAB */}
       {activeTab === "all" && (
         <div className="fade-in">
           <div className="d-flex justify-content-between align-items-center mb-3 px-1">
             <div className="d-flex gap-2 align-items-center">
-              {/* <select
-                className="form-select form-select-sm w-auto border-0 bg-light fw-bold rounded-pill px-3 shadow-sm"
-                value={filter.category}
-                onChange={(e) =>
-                  setFilter({ ...filter, category: e.target.value })
-                }
-              >
-                <option value="all">All Categories</option>
-                <option value="admin">Admin</option>
-                <option value="focus">Focus</option>
-                <option value="physical">Physical</option>
-                <option value="social">Social</option>
-                <option value="stress">High Stress</option>
-              </select> */}
               <select
                 className="form-select form-select-sm w-auto border-0 bg-light fw-bold rounded-pill px-3 shadow-sm"
                 value={filter.category}
