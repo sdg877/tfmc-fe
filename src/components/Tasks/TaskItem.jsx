@@ -3,39 +3,6 @@ import axios from "axios";
 import DeleteTask from "./DeleteTask";
 import EditTask from "./EditTask";
 
-// const categoryStyles = {
-//   admin: {
-//     backgroundColor: "#f3e5f5",
-//     color: "#7b1fa2",
-//     border: "1px solid #ce93d8",
-//   },
-//   physical: {
-//     backgroundColor: "#e8f5e9",
-//     color: "#2e7d32",
-//     border: "1px solid #a5d6a7",
-//   },
-//   social: {
-//     backgroundColor: "#e3f2fd",
-//     color: "#1565c0",
-//     border: "1px solid #90caf9",
-//   },
-//   focus: {
-//     backgroundColor: "#fff3e0",
-//     color: "#e65100",
-//     border: "1px solid #ffcc80",
-//   },
-//   stress: {
-//     backgroundColor: "#fce4ec",
-//     color: "#c2185b",
-//     border: "1px solid #f48fb1",
-//   },
-//   default: {
-//     backgroundColor: "#f5f5f5",
-//     color: "#757575",
-//     border: "1px solid #e0e0e0",
-//   },
-// };
-
 const pastelPalette = [
   { bg: "#f3e5f5", text: "#7b1fa2", border: "#ce93d8" },
   { bg: "#e8f5e9", text: "#2e7d32", border: "#a5d6a7" },
