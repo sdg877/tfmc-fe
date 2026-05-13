@@ -2,6 +2,12 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 const AddTask = ({ onTaskAdded, user }) => {
+  const todayString = new Date().toISOString().split("T")[0];
+  const nowString = new Date()
+    .toLocaleString("sv-SE")
+    .slice(0, 16)
+    .replace(" ", "T");
+
   const getNextWholeHour = () => {
     const now = new Date();
     now.setHours(now.getHours() + 1);
@@ -58,6 +64,13 @@ const AddTask = ({ onTaskAdded, user }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Final validation check
+    if (syncToGoogle && new Date(eventTime) < new Date()) {
+      alert("You cannot schedule a task in the past.");
+      return;
+    }
+
     const token = localStorage.getItem("token");
     const baseURL = import.meta.env.VITE_API_URL;
 
@@ -100,6 +113,7 @@ const AddTask = ({ onTaskAdded, user }) => {
 
       onTaskAdded(finalTask);
 
+      // Reset Form
       setFormData({
         title: "",
         category: "",
@@ -167,6 +181,7 @@ const AddTask = ({ onTaskAdded, user }) => {
             type="date"
             className="form-control border-0 bg-light py-2 shadow-none"
             value={formData.dueDate}
+            min={todayString}
             onChange={(e) =>
               setFormData({ ...formData, dueDate: e.target.value })
             }
@@ -245,6 +260,7 @@ const AddTask = ({ onTaskAdded, user }) => {
                 type="datetime-local"
                 className="form-control border-0 bg-white shadow-sm"
                 value={eventTime}
+                min={nowString}
                 onChange={(e) => setEventTime(e.target.value)}
                 required={syncToGoogle}
               />
