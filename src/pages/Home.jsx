@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import HeatMapGrid from "../components/HeatMap/HeatMapGrid";
+import AppLoader from "../components/Layout/AppLoader";
 
 const categoryStyles = {
   admin: {
@@ -155,12 +156,9 @@ const Home = () => {
     );
   }
 
-  if (loading)
-    return (
-      <div className="container py-5 text-center text-muted">
-        Loading dashboard...
-      </div>
-    );
+  if (loading) {
+    return <AppLoader message="Just a sec..." />;
+  }
 
   return (
     <div className="container-fluid mt-4 px-lg-5">

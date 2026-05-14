@@ -4,6 +4,7 @@ import AddTask from "../components/Tasks/AddTask";
 import TaskItem from "../components/Tasks/TaskItem";
 import EnergyProgress from "../components/Energy/EnergyProgress";
 import EnergyWarningModal from "../components/Energy/EnergyWarningModal";
+import AppLoader from "../components/Layout/AppLoader";
 
 const pastelPalette = [
   { bg: "#f3e5f5", text: "#7b1fa2", border: "#ce93d8" },
@@ -150,12 +151,9 @@ const Tasks = () => {
     setActiveTab("today");
   };
 
-  if (loading)
-    return (
-      <div className="container mt-5 text-center text-muted py-5">
-        Loading...
-      </div>
-    );
+  if (loading) {
+    return <AppLoader message="Just a sec..." />;
+  }
 
   const todayTasks = tasks.filter(
     (t) => !t.isCompleted && (t.urgency === "now" || t.isPlannedForToday),

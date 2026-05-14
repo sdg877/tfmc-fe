@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import HeatMapGrid from "../components/HeatMap/HeatMapGrid";
+import AppLoader from "../components/Layout/AppLoader";
 
 const Progress = () => {
   const [heatmapData, setHeatmapData] = useState({});
@@ -69,12 +70,9 @@ const Progress = () => {
     fetchStats();
   }, [baseURL, token]);
 
-  if (loading)
-    return (
-      <div className="container py-5 text-center text-muted">
-        Loading your progress...
-      </div>
-    );
+  if (loading) {
+    return <AppLoader message="Just a sec..." />;
+  }
 
   return (
     <div className="container py-4" style={{ maxWidth: "800px" }}>

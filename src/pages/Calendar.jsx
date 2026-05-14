@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import TaskCalendar from "../components/Tasks/TaskCalendar";
+import AppLoader from "../components/Layout/AppLoader";
 
 const Calendar = ({ user }) => {
   const [tasks, setTasks] = useState([]);
@@ -38,11 +39,7 @@ const Calendar = ({ user }) => {
   }, [baseURL, token]);
 
   if (loading) {
-    return (
-      <div className="container mt-5 text-center">
-        <div className="spinner-border text-dark" role="status"></div>
-      </div>
-    );
+    return <AppLoader message="Just a sec..." />;
   }
 
   return (
