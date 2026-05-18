@@ -5,6 +5,7 @@ import TaskItem from "../components/Tasks/TaskItem";
 import EnergyProgress from "../components/Energy/EnergyProgress";
 import EnergyWarningModal from "../components/Energy/EnergyWarningModal";
 import AppLoader from "../components/Layout/AppLoader";
+import TaskDetailModal from "../components/Tasks/TaskDetailModal";
 
 const pastelPalette = [
   { bg: "#f3e5f5", text: "#7b1fa2", border: "#ce93d8" },
@@ -36,6 +37,7 @@ const Tasks = () => {
   const [warningLevel, setWarningLevel] = useState(0);
   const [currentLoad, setCurrentLoad] = useState(0);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [modalMode, setModalMode] = useState("view");
 
   const [silencedLevel, setSilencedLevel] = useState(() => {
     return parseInt(localStorage.getItem("silencedEnergyLevel")) || 0;
@@ -151,6 +153,32 @@ const Tasks = () => {
     setActiveTab("today");
   };
 
+  const handleUpdateTask = (updatedTask) => {
+    setTasks((prev) =>
+      prev.map((t) => (t._id === updatedTask._id ? updatedTask : t)),
+    );
+    setSelectedTask(updatedTask);
+  };
+
+  const handleDeleteTask = async (taskId, googleId) => {
+    try {
+      await axios.delete(`${baseURL}/tasks/${taskId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { googleEventId: googleId },
+      });
+      setTasks((prev) => prev.filter((t) => t._id !== taskId));
+      setSelectedTask(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Helper to trigger the specific modal mode from the Item buttons
+  const handleSelectTask = (task, mode = "view") => {
+    setSelectedTask(task);
+    setModalMode(mode);
+  };
+
   if (loading) {
     return <AppLoader message="Just a sec..." />;
   }
@@ -208,7 +236,7 @@ const Tasks = () => {
         level={warningLevel}
       />
 
-      {/* Task Detail Modal - FIX IMPLEMENTED HERE */}
+      {/* Task Detail Modal - RESTORED BLOCK */}
       {selectedTask && (
         <div
           className="modal fade show d-block"
@@ -228,7 +256,7 @@ const Tasks = () => {
                 <div>
                   <span
                     className="badge mb-2 text-uppercase"
-                    style={getCategoryStyle(selectedTask.category)} // Using getCategoryStyle now
+                    style={getCategoryStyle(selectedTask.category)}
                   >
                     {selectedTask.category}
                   </span>
@@ -292,6 +320,32 @@ const Tasks = () => {
         </div>
       )}
 
+      {/* Task Detail Modal - Component Logic - RESTORED BLOCK */}
+      <TaskDetailModal
+        show={!!selectedTask}
+        task={selectedTask}
+        mode={modalMode}
+        user={user}
+        onClose={() => setSelectedTask(null)}
+        onSwitchMode={(newMode) => setModalMode(newMode)}
+        onUpdate={handleUpdateTask}
+        onDelete={handleDeleteTask}
+        onToggleComplete={async (task) => {
+          const token = localStorage.getItem("token");
+          try {
+            const res = await axios.put(
+              `${import.meta.env.VITE_API_URL}/tasks/${task._id}`,
+              { isCompleted: !task.isCompleted },
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            handleUpdateTask(res.data);
+          } catch (err) {
+            console.error("Quick toggle failed", err);
+          }
+        }}
+        getCategoryStyle={getCategoryStyle}
+      />
+
       {activeTab === "today" && (
         <div className="fade-in">
           {todayTasks.length > 0 ? (
@@ -300,9 +354,9 @@ const Tasks = () => {
                 <TaskItem
                   key={t._id}
                   task={t}
+                  user={user}
                   setTasks={setTasks}
-                  showEnergyBar={showEnergyBar}
-                  onSelect={setSelectedTask}
+                  onSelect={handleSelectTask}
                 />
               ))}
             </div>
@@ -403,7 +457,7 @@ const Tasks = () => {
                     task={t}
                     user={user}
                     setTasks={setTasks}
-                    onSelect={setSelectedTask}
+                    onSelect={handleSelectTask}
                   />
                 </div>
               ))}
