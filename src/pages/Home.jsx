@@ -3,52 +3,54 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import HeatMapGrid from "../components/HeatMap/HeatMapGrid";
 import AppLoader from "../components/Layout/AppLoader";
+import TaskDetailModal from "../components/Tasks/TaskDetailModal";
 
-const categoryStyles = {
-  admin: {
-    backgroundColor: "#f3e5f5",
-    color: "#7b1fa2",
-    border: "1px solid #ce93d8",
-  },
-  physical: {
-    backgroundColor: "#e8f5e9",
-    color: "#2e7d32",
-    border: "1px solid #a5d6a7",
-  },
-  social: {
-    backgroundColor: "#e3f2fd",
-    color: "#1565c0",
-    border: "1px solid #90caf9",
-  },
-  focus: {
-    backgroundColor: "#fff3e0",
-    color: "#e65100",
-    border: "1px solid #ffcc80",
-  },
-  stress: {
-    backgroundColor: "#fce4ec",
-    color: "#c2185b",
-    border: "1px solid #f48fb1",
-  },
-  default: {
-    backgroundColor: "#f5f5f5",
-    color: "#757575",
-    border: "1px solid #e0e0e0",
-  },
-};
+const pastelPalette = [
+  { bg: "#f3e5f5", text: "#7b1fa2", border: "#ce93d8" },
+  { bg: "#e8f5e9", text: "#2e7d32", border: "#a5d6a7" },
+  { bg: "#e3f2fd", text: "#1565c0", border: "#90caf9" },
+  { bg: "#fff3e0", text: "#e65100", border: "#ffcc80" },
+  { bg: "#fce4ec", text: "#c2185b", border: "#f48fb1" },
+  { bg: "#f1f8e9", text: "#558b2f", border: "#c5e1a5" },
+  { bg: "#e0f7fa", text: "#00838f", border: "#b2ebf2" },
+  { bg: "#fff9c4", text: "#fbc02d", border: "#fff59d" },
+  { bg: "#efebe9", text: "#4e342e", border: "#d7ccc8" },
+  { bg: "#ede7f6", text: "#4527a0", border: "#d1c4e9" },
+];
 
 const Home = () => {
   const [tasks, setTasks] = useState([]);
+  const [user, setUser] = useState(null);
   const [userName, setUserName] = useState("");
   const [joinDate, setJoinDate] = useState(null);
   const [heatmapData, setHeatmapData] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [modalMode, setModalMode] = useState("view");
   const token = localStorage.getItem("token");
 
   const hour = new Date().getHours();
   const greeting =
     hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+
+  const getCategoryStyle = (catName) => {
+    if (!user?.categories)
+      return {
+        backgroundColor: "#f5f5f5",
+        color: "#757575",
+        border: "1px solid #e0e0e0",
+      };
+    const index = user.categories.findIndex(
+      (c) => c.name.toLowerCase() === catName?.toLowerCase(),
+    );
+    const styleIndex = index !== -1 ? index : 0;
+    const colors = pastelPalette[styleIndex % pastelPalette.length];
+    return {
+      backgroundColor: colors.bg,
+      color: colors.text,
+      border: `1px solid ${colors.border}`,
+    };
+  };
 
   useEffect(() => {
     if (token) {
@@ -65,6 +67,7 @@ const Home = () => {
           ]);
 
           setTasks(resTasks.data);
+          setUser(resUser.data);
           setUserName(resUser.data.name || "");
           setJoinDate(resUser.data.createdAt);
 
@@ -110,6 +113,39 @@ const Home = () => {
       fetchData();
     }
   }, [token]);
+
+  const handleUpdateTask = (updatedTask) => {
+    setTasks((prev) =>
+      prev.map((t) => (t._id === updatedTask._id ? updatedTask : t)),
+    );
+    setSelectedTask(updatedTask);
+  };
+
+  const handleDeleteTask = async (taskId, googleId) => {
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/tasks/${taskId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { googleEventId: googleId },
+      });
+      setTasks((prev) => prev.filter((t) => t._id !== taskId));
+      setSelectedTask(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleToggleComplete = async (task) => {
+    try {
+      const res = await axios.put(
+        `${import.meta.env.VITE_API_URL}/tasks/${task._id}`,
+        { isCompleted: !task.isCompleted },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      handleUpdateTask(res.data);
+    } catch (err) {
+      console.error("Toggle complete failed", err);
+    }
+  };
 
   const todayLocal = new Date().toLocaleDateString("sv-SE");
 
@@ -172,93 +208,18 @@ const Home = () => {
         </p>
       </header>
 
-      {selectedTask && (
-        <div
-          className="modal fade show d-block"
-          style={{
-            backgroundColor: "rgba(0,0,0,0.6)",
-            backdropFilter: "blur(4px)",
-            zIndex: 1050,
-          }}
-          onClick={() => setSelectedTask(null)}
-        >
-          <div
-            className="modal-dialog modal-dialog-centered"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-              <div className="modal-header border-0 p-4 pb-0 d-flex justify-content-between align-items-start">
-                <div>
-                  <span
-                    className="badge mb-2 text-uppercase"
-                    style={
-                      categoryStyles[selectedTask.category] ||
-                      categoryStyles.default
-                    }
-                  >
-                    {selectedTask.category}
-                  </span>
-                  <h3 className="modal-title fw-bold text-dark">
-                    {selectedTask.title}
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setSelectedTask(null)}
-                ></button>
-              </div>
-              <div className="modal-body p-4">
-                {selectedTask.notes && (
-                  <div className="mb-4">
-                    <label className="small fw-bold text-muted text-uppercase ls-wide d-block mb-1">
-                      Notes
-                    </label>
-                    <p
-                      className="bg-light p-3 rounded-3 text-dark mb-0"
-                      style={{ whiteSpace: "pre-wrap" }}
-                    >
-                      {selectedTask.notes}
-                    </p>
-                  </div>
-                )}
-                <div className="row g-3">
-                  <div className="col-6">
-                    <label className="small fw-bold text-muted text-uppercase ls-wide d-block mb-1">
-                      Urgency
-                    </label>
-                    <span
-                      className={`badge rounded-pill px-3 py-2 bg-dark text-white`}
-                    >
-                      {selectedTask.urgency.toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="col-6">
-                    <label className="small fw-bold text-muted text-uppercase ls-wide d-block mb-1">
-                      Due Date
-                    </label>
-                    <p className="fw-bold mb-0 text-dark">
-                      {selectedTask.dueDate
-                        ? new Date(selectedTask.dueDate).toLocaleDateString(
-                            "en-GB",
-                          )
-                        : "No date set"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer border-0 bg-light p-3 justify-content-start">
-                <small className="text-muted">
-                  Added on:{" "}
-                  {new Date(
-                    selectedTask.createdAt || Date.now(),
-                  ).toLocaleDateString("en-GB")}
-                </small>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <TaskDetailModal
+        show={!!selectedTask}
+        task={selectedTask}
+        mode={modalMode}
+        user={user}
+        onClose={() => setSelectedTask(null)}
+        onSwitchMode={(newMode) => setModalMode(newMode)}
+        onUpdate={handleUpdateTask}
+        onDelete={handleDeleteTask}
+        onToggleComplete={handleToggleComplete}
+        getCategoryStyle={getCategoryStyle}
+      />
 
       <div
         className="row g-4 align-items-stretch"
@@ -326,7 +287,10 @@ const Home = () => {
                       key={t._id}
                       className="p-3 mb-2 bg-danger bg-opacity-10 border-start border-danger border-3 rounded small fw-bold text-danger"
                       style={{ cursor: "pointer" }}
-                      onClick={() => setSelectedTask(t)}
+                      onClick={() => {
+                        setSelectedTask(t);
+                        setModalMode("view");
+                      }}
                     >
                       {t.title}
                     </div>
@@ -339,7 +303,10 @@ const Home = () => {
                     key={t._id}
                     className="p-3 mb-2 bg-light rounded small fw-bold text-dark"
                     style={{ cursor: "pointer" }}
-                    onClick={() => setSelectedTask(t)}
+                    onClick={() => {
+                      setSelectedTask(t);
+                      setModalMode("view");
+                    }}
                   >
                     {t.title}
                   </div>
