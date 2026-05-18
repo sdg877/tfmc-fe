@@ -111,9 +111,7 @@ const Tasks = () => {
             try {
               const resEnergy = await axios.get(
                 `${baseURL}/users/energy-usage`,
-                {
-                  headers: { Authorization: `Bearer ${token}` },
-                },
+                { headers: { Authorization: `Bearer ${token}` } },
               );
               setGoogleDrain(resEnergy.data.googleEnergyDrain || 0);
             } catch (err) {
@@ -173,7 +171,6 @@ const Tasks = () => {
     }
   };
 
-  // Helper to trigger the specific modal mode from the Item buttons
   const handleSelectTask = (task, mode = "view") => {
     setSelectedTask(task);
     setModalMode(mode);
@@ -236,91 +233,6 @@ const Tasks = () => {
         level={warningLevel}
       />
 
-      {/* Task Detail Modal - RESTORED BLOCK */}
-      {selectedTask && (
-        <div
-          className="modal fade show d-block"
-          style={{
-            backgroundColor: "rgba(0,0,0,0.6)",
-            backdropFilter: "blur(4px)",
-            zIndex: 1060,
-          }}
-          onClick={() => setSelectedTask(null)}
-        >
-          <div
-            className="modal-dialog modal-dialog-centered"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-              <div className="modal-header border-0 p-4 pb-0 d-flex justify-content-between align-items-start">
-                <div>
-                  <span
-                    className="badge mb-2 text-uppercase"
-                    style={getCategoryStyle(selectedTask.category)}
-                  >
-                    {selectedTask.category}
-                  </span>
-                  <h3 className="modal-title fw-bold text-dark">
-                    {selectedTask.title}
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setSelectedTask(null)}
-                ></button>
-              </div>
-              <div className="modal-body p-4 text-dark">
-                {selectedTask.notes && (
-                  <div className="mb-4">
-                    <label className="small fw-bold text-muted text-uppercase ls-wide d-block mb-1">
-                      Notes
-                    </label>
-                    <p
-                      className="bg-light p-3 rounded-3 mb-0"
-                      style={{ whiteSpace: "pre-wrap" }}
-                    >
-                      {selectedTask.notes}
-                    </p>
-                  </div>
-                )}
-                <div className="row g-3">
-                  <div className="col-6">
-                    <label className="small fw-bold text-muted text-uppercase ls-wide d-block mb-1">
-                      Urgency
-                    </label>
-                    <span className="badge rounded-pill px-3 py-2 bg-dark text-white">
-                      {selectedTask.urgency.toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="col-6">
-                    <label className="small fw-bold text-muted text-uppercase ls-wide d-block mb-1">
-                      Due Date
-                    </label>
-                    <p className="fw-bold mb-0">
-                      {selectedTask.dueDate
-                        ? new Date(selectedTask.dueDate).toLocaleDateString(
-                            "en-GB",
-                          )
-                        : "No date set"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer border-0 bg-light p-3 justify-content-start">
-                <small className="text-muted">
-                  Added on:{" "}
-                  {new Date(
-                    selectedTask.createdAt || Date.now(),
-                  ).toLocaleDateString("en-GB")}
-                </small>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Task Detail Modal - Component Logic - RESTORED BLOCK */}
       <TaskDetailModal
         show={!!selectedTask}
         task={selectedTask}
