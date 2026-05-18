@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import EnergySlider from "../components/Energy/EnergySlider";
 import EnergyToggle from "../components/Energy/EnergyToggle";
-import GoogleConnect from "../components/Auth/GoogleConnect";
+import GoogleConnect from "../components/Google/GoogleConnect";
 import CategoryManager from "../components/Energy/CategoryManager";
 
 const Settings = ({ user, setUser }) => {
