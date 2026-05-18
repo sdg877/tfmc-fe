@@ -54,7 +54,12 @@ const Calendar = ({ user }) => {
       </div>
 
       <div className="bg-white rounded-4 shadow-sm overflow-hidden border">
-        <TaskCalendar tasks={tasks} googleEvents={googleEvents} />
+        <TaskCalendar
+          tasks={tasks}
+          setTasks={setTasks}
+          googleEvents={googleEvents}
+          user={user}
+        />
       </div>
     </div>
   );
