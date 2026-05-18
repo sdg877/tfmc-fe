@@ -1,11 +1,17 @@
 import React, { useState } from "react";
 import EnergySlider from "../components/Energy/EnergySlider";
 import EnergyToggle from "../components/Energy/EnergyToggle";
+import HeatmapToggle from "../components/Energy/HeatmapToggle";
 import GoogleConnect from "../components/Google/GoogleConnect";
 import CategoryManager from "../components/Energy/CategoryManager";
 
 const Settings = ({ user, setUser }) => {
   const [activeTab, setActiveTab] = useState("energy");
+
+  const [showHeatMap, setShowHeatMap] = useState(() => {
+    const saved = localStorage.getItem("showHeatMap");
+    return saved !== null ? JSON.parse(saved) : true;
+  });
 
   if (!user)
     return (
@@ -26,6 +32,11 @@ const Settings = ({ user, setUser }) => {
       ...prev,
       settings: { ...prev.settings, showEnergyBar: val },
     }));
+  };
+
+  const handleHeatMapToggleUpdate = (val) => {
+    setShowHeatMap(val);
+    localStorage.setItem("showHeatMap", JSON.stringify(val));
   };
 
   return (
@@ -56,13 +67,20 @@ const Settings = ({ user, setUser }) => {
         {activeTab === "energy" && (
           <div className="fade-in">
             <h6 className="text-uppercase fw-bold text-muted small mb-3 px-1">
-              Energy Dashboard
+              Display Preferences
             </h6>
 
             <div className="card border-0 shadow-sm rounded-4 p-4 mb-3">
               <EnergyToggle
                 showEnergyBar={showEnergyFeatures}
                 onUpdate={updateEnergyToggle}
+              />
+
+              <hr className="my-3 opacity-10" />
+
+              <HeatmapToggle
+                showHeatMap={showHeatMap}
+                onUpdate={handleHeatMapToggleUpdate}
               />
             </div>
 
