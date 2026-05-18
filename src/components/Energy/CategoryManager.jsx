@@ -4,6 +4,7 @@ import CustomModal from "../Layout/CustomModal.jsx";
 
 const CategoryManager = ({ user, onUpdate }) => {
   const [newCat, setNewCat] = useState({ name: "", weight: 10 });
+  const [duplicateError, setDuplicateError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [showResetModal, setShowResetModal] = useState(false);
   const [showToggleWarning, setShowToggleWarning] = useState(false);
@@ -72,7 +73,21 @@ const CategoryManager = ({ user, onUpdate }) => {
 
   const handleAdd = async () => {
     if (!newCat.name || user.categories?.length >= 10) return;
+
+    // Normalise strings to strip spaces and ignore case matching
+    const cleanNewName = newCat.name.trim().toLowerCase();
+
+    const isDuplicate = user.categories?.some(
+      (cat) => cat.name.trim().toLowerCase() === cleanNewName,
+    );
+
+    if (isDuplicate) {
+      setDuplicateError(`"${capitalise(newCat.name)}" already exists.`);
+      return;
+    }
+
     try {
+      setDuplicateError("");
       const res = await axios.post(
         `${baseURL}/users/categories`,
         { name: capitalise(newCat.name), weight: Number(newCat.weight) },
@@ -94,6 +109,7 @@ const CategoryManager = ({ user, onUpdate }) => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       onUpdate((prev) => ({ ...prev, categories: res.data }));
+      setDuplicateError("");
     } catch (err) {
       console.error("Reset failed", err);
     }
@@ -224,15 +240,24 @@ const CategoryManager = ({ user, onUpdate }) => {
                 border: "1px dashed #dee2e6",
               }}
             >
+              {duplicateError && (
+                <div
+                  className="text-danger fw-bold small mb-2 text-uppercase"
+                  style={{ fontSize: "0.7rem" }}
+                >
+                  ⚠️ {duplicateError}
+                </div>
+              )}
               <div className="row g-2">
                 <div className="col-7">
                   <input
                     className="form-control form-control-sm border-0 shadow-none"
                     placeholder="New Category..."
                     value={newCat.name}
-                    onChange={(e) =>
-                      setNewCat({ ...newCat, name: e.target.value })
-                    }
+                    onChange={(e) => {
+                      if (duplicateError) setDuplicateError("");
+                      setNewCat({ ...newCat, name: e.target.value });
+                    }}
                   />
                 </div>
                 <div className="col-3">
@@ -259,7 +284,6 @@ const CategoryManager = ({ user, onUpdate }) => {
         </div>
       )}
 
-      {/* Toggle Custom Weights Off Warning Modal */}
       <CustomModal
         show={showToggleWarning}
         title="DISABLE MANUAL WEIGHTS"
