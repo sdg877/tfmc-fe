@@ -1,7 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
 import DeleteTask from "./DeleteTask";
-import EditTask from "./EditTask";
 
 const pastelPalette = [
   { bg: "#f3e5f5", text: "#7b1fa2", border: "#ce93d8" },
@@ -17,7 +16,6 @@ const pastelPalette = [
 ];
 
 const TaskItem = ({ task, setTasks, onSelect, user }) => {
-  const [isEditing, setIsEditing] = useState(false);
   const token = localStorage.getItem("token");
   const baseURL = import.meta.env.VITE_API_URL;
 
@@ -32,6 +30,20 @@ const TaskItem = ({ task, setTasks, onSelect, user }) => {
       setTasks((prev) => prev.map((t) => (t._id === task._id ? res.data : t)));
     } catch (err) {
       console.error("Toggle failed", err);
+    }
+  };
+
+  const handleToggleStar = async (e) => {
+    e.stopPropagation();
+    try {
+      const res = await axios.put(
+        `${baseURL}/tasks/${task._id}`,
+        { isPlannedForToday: !task.isPlannedForToday },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setTasks((prev) => prev.map((t) => (t._id === task._id ? res.data : t)));
+    } catch (err) {
+      console.error("Star toggle failed", err);
     }
   };
 
@@ -97,22 +109,16 @@ const TaskItem = ({ task, setTasks, onSelect, user }) => {
         prev.map((t) => (t._id === task._id ? updateRes.data : t)),
       );
 
-      alert("Synced to Google! The delete button should work now.");
+      alert("Synced to Google!");
     } catch (err) {
       console.error("Sync Error:", err);
     }
   };
 
-  if (isEditing) {
-    return (
-      <EditTask task={task} setTasks={setTasks} setIsEditing={setIsEditing} />
-    );
-  }
-
   return (
     <div
       className={`list-group-item d-flex justify-content-between align-items-center mb-2 shadow-sm border rounded-4 p-3 ${task.isCompleted ? "bg-light opacity-75" : "bg-white"}`}
-      onClick={() => onSelect(task)}
+      onClick={() => onSelect(task, "view")}
       style={{ cursor: "pointer" }}
     >
       <div className="d-flex align-items-center gap-3">
@@ -149,16 +155,35 @@ const TaskItem = ({ task, setTasks, onSelect, user }) => {
           >
             {task.title}
           </h6>
-          <span
-            className="badge small border-0 text-capitalize"
-            style={currentStyle}
-          >
-            {task.category}
-          </span>
+          <div className="d-flex align-items-center gap-2 mt-1">
+            <span
+              className="badge small border-0 text-capitalize"
+              style={currentStyle}
+            >
+              {task.category}
+            </span>
+            {task.dueDate && (
+              <small className="text-muted">
+                📅 {new Date(task.dueDate).toLocaleDateString("en-GB")}
+              </small>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="d-flex gap-1 align-items-center">
+        {/* Star Button */}
+        <button
+          className="btn btn-sm shadow-none p-0 px-2"
+          style={{
+            color: task.isPlannedForToday ? "#ffc107" : "#dee2e6",
+            fontSize: "1.2rem",
+          }}
+          onClick={handleToggleStar}
+        >
+          {task.isPlannedForToday ? "★" : "☆"}
+        </button>
+
         {!task.isCompleted && !task.googleEventId && (
           <button
             onClick={syncToGoogle}
@@ -179,10 +204,12 @@ const TaskItem = ({ task, setTasks, onSelect, user }) => {
             </svg>
           </button>
         )}
+
+        {/* Edit Button - now triggers modal in edit mode */}
         <button
           onClick={(e) => {
             e.stopPropagation();
-            setIsEditing(true);
+            onSelect(task, "edit");
           }}
           className="btn btn-sm text-primary border-0 p-0 px-2"
         >
@@ -198,6 +225,7 @@ const TaskItem = ({ task, setTasks, onSelect, user }) => {
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
           </svg>
         </button>
+
         <DeleteTask
           taskId={task._id}
           googleEventId={task.googleEventId}
