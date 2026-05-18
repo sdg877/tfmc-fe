@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 
 const EnergySlider = ({ initialValue, onUpdate }) => {
@@ -25,19 +25,29 @@ const EnergySlider = ({ initialValue, onUpdate }) => {
   };
 
   return (
-    <div className="card p-3 border-0 shadow-sm bg-white">
+    <div className="card p-3 border-0 shadow-sm bg-white rounded-4">
       <div className="d-flex justify-content-between align-items-center mb-2">
-        <label className="fw-bold mb-0">Daily Capacity</label>
-        <span
-          className={`badge ${limit < 100 ? "bg-warning text-dark" : "bg-primary"}`}
+        <label
+          className="fw-bold mb-0 text-dark"
+          style={{ fontSize: "0.85rem" }}
         >
-          {limit}%
+          Daily Capacity
+        </label>
+        <span
+          className={`badge rounded-pill fw-bold ${
+            limit < 100
+              ? "bg-warning-subtle text-warning-emphasis border border-warning-subtle"
+              : "bg-light text-dark border"
+          }`}
+          style={{ fontSize: "0.75rem" }}
+        >
+          {limit}% Available
         </span>
       </div>
 
       <input
         type="range"
-        className="form-range"
+        className="form-range custom-slider-thumb"
         min="10"
         max="100"
         step="5"
@@ -45,16 +55,26 @@ const EnergySlider = ({ initialValue, onUpdate }) => {
         onChange={(e) => setLimit(e.target.value)}
         onMouseUp={(e) => handleSave(e.target.value)}
         onTouchEnd={(e) => handleSave(e.target.value)}
+        style={{ cursor: "pointer" }}
       />
 
       <div className="d-flex justify-content-between mt-1">
-        <small className="text-muted">Low Energy</small>
-        <small className="text-muted">Full Power</small>
+        <small className="text-muted fw-medium" style={{ fontSize: "0.65rem" }}>
+          Low Energy
+        </small>
+        <small className="text-muted fw-medium" style={{ fontSize: "0.65rem" }}>
+          Full Power
+        </small>
       </div>
 
       {saving && (
-        <div className="text-center mt-2">
-          <small className="text-primary">Saving...</small>
+        <div className="text-center mt-1.5" style={{ height: "10px" }}>
+          <small
+            className="text-muted text-uppercase fw-bold tracking-wider"
+            style={{ fontSize: "0.55rem" }}
+          >
+            Updating...
+          </small>
         </div>
       )}
     </div>
