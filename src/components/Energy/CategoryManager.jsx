@@ -6,6 +6,7 @@ const CategoryManager = ({ user, onUpdate }) => {
   const [newCat, setNewCat] = useState({ name: "", weight: 10 });
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showToggleWarning, setShowToggleWarning] = useState(false);
 
   const token = localStorage.getItem("token");
   const baseURL = import.meta.env.VITE_API_URL;
@@ -27,11 +28,21 @@ const CategoryManager = ({ user, onUpdate }) => {
 
   const capitalise = (str) => {
     if (!str) return "";
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    return str
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
   };
 
-  const handleToggleManual = async () => {
-    const newValue = !user.useManualWeights;
+  const handleToggleClick = () => {
+    if (user.useManualWeights) {
+      setShowToggleWarning(true);
+    } else {
+      executeToggle(true);
+    }
+  };
+
+  const executeToggle = async (newValue) => {
     try {
       const res = await axios.put(
         `${baseURL}/users/profile/identity`,
@@ -39,6 +50,7 @@ const CategoryManager = ({ user, onUpdate }) => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       onUpdate(res.data);
+      setShowToggleWarning(false);
     } catch (err) {
       console.error("Toggle failed");
     }
@@ -110,7 +122,7 @@ const CategoryManager = ({ user, onUpdate }) => {
             type="checkbox"
             id="manualModeSwitch"
             checked={user.useManualWeights || false}
-            onChange={handleToggleManual}
+            onChange={handleToggleClick}
           />
           <label
             className="form-check-label small fw-bold text-dark cursor-pointer"
@@ -158,7 +170,11 @@ const CategoryManager = ({ user, onUpdate }) => {
                     type="text"
                     className="flex-grow-1 fw-bold border-0 bg-transparent shadow-none p-0"
                     style={{ color: style.text, outline: "none" }}
-                    defaultValue={cat.name}
+                    value={capitalise(cat.name)}
+                    onChange={(e) => {
+                      cat.name = e.target.value;
+                      onUpdate({ ...user });
+                    }}
                     onBlur={(e) =>
                       saveUpdate(cat._id, { name: e.target.value })
                     }
@@ -180,10 +196,20 @@ const CategoryManager = ({ user, onUpdate }) => {
                   </div>
 
                   <button
-                    className="btn btn-sm p-0 px-1 text-danger border-0"
                     onClick={() => setDeleteTarget(cat._id)}
+                    className="btn btn-sm text-danger border-0 p-0 px-2"
                   >
-                    ✕
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
                   </button>
                 </div>
               );
@@ -232,6 +258,16 @@ const CategoryManager = ({ user, onUpdate }) => {
           )}
         </div>
       )}
+
+      {/* Toggle Custom Weights Off Warning Modal */}
+      <CustomModal
+        show={showToggleWarning}
+        title="DISABLE MANUAL WEIGHTS"
+        message="Are you sure you want to revert to default values? Any existing tasks will retain the custom point values used when they were created."
+        type="danger"
+        onClose={() => setShowToggleWarning(false)}
+        onConfirm={() => executeToggle(false)}
+      />
 
       <CustomModal
         show={!!deleteTarget}
