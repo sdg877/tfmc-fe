@@ -1,19 +1,29 @@
 import React from "react";
 
-const EnergyProgress = ({ tasks, dailyLimit }) => {
+const EnergyProgress = ({ tasks, dailyLimit, user }) => {
   const currentLimit = Number(dailyLimit) || 100;
+
+  const getCategoryWeight = (task) => {
+    if (user?.categories?.length) {
+      const cat = user.categories.find(
+        (c) => c.name.toLowerCase() === task.category?.toLowerCase(),
+      );
+      if (cat) return cat.weight;
+    }
+    const fallbackWeights = {
+      social: 10,
+      physical: 15,
+      admin: 20,
+      focus: 25,
+      stress: 35,
+    };
+    return fallbackWeights[task.category?.toLowerCase()] || 10;
+  };
 
   const calculateEnergyBreakdown = (list) => {
     if (!list || list.length === 0) return { completed: 0, planned: 0 };
 
     const today = new Date().toLocaleDateString("en-GB");
-    const fallbackWeights = {
-      admin: 10,
-      physical: 20,
-      social: 30,
-      focus: 40,
-      stress: 45,
-    };
 
     return list.reduce(
       (acc, t) => {
@@ -21,17 +31,17 @@ const EnergyProgress = ({ tasks, dailyLimit }) => {
         const isDueToday =
           t.dueDate &&
           new Date(t.dueDate).toLocaleDateString("en-GB") === today;
+
         const completedToday =
           t.isCompleted &&
-          t.updatedAt &&
-          new Date(t.updatedAt).toLocaleDateString("en-GB") === today;
+          t.completedAt &&
+          new Date(t.completedAt).toLocaleDateString("en-GB") === today;
 
-        const taskWeight =
-          Number(t.weight) || fallbackWeights[t.category?.toLowerCase()] || 10;
+        const taskWeight = getCategoryWeight(t);
 
         if (completedToday) {
           acc.completed += taskWeight;
-        } else if (isPlannedToday || isDueToday) {
+        } else if (!t.isCompleted && (isPlannedToday || isDueToday)) {
           acc.planned += taskWeight;
         }
         return acc;
@@ -46,12 +56,10 @@ const EnergyProgress = ({ tasks, dailyLimit }) => {
   const usagePercentage =
     currentLimit > 0 ? Math.round((totalUnitsUsed / currentLimit) * 100) : 0;
 
-  const completedWidth = Math.min((completed / 100) * 100, currentLimit);
-  const plannedWidth = Math.min(
-    (planned / 100) * 100,
-    currentLimit - completedWidth,
-  );
-  const lockedWidth = 100 - currentLimit;
+  const completedWidth =
+    currentLimit > 0 ? (completed / currentLimit) * 100 : 0;
+  const plannedWidth = currentLimit > 0 ? (planned / currentLimit) * 100 : 0;
+  const lockedWidth = 100 - (currentLimit > 100 ? 100 : currentLimit);
 
   const isOverload = totalUnitsUsed > currentLimit;
   const getBatteryColor = () => {
@@ -106,7 +114,7 @@ const EnergyProgress = ({ tasks, dailyLimit }) => {
           >
             <div
               style={{
-                width: `${completedWidth}%`,
+                width: `${Math.min(completedWidth, 100)}%`,
                 backgroundColor: getBatteryColor(),
                 transition: "width 0.4s ease",
                 height: "100%",
@@ -114,7 +122,7 @@ const EnergyProgress = ({ tasks, dailyLimit }) => {
             />
             <div
               style={{
-                width: `${plannedWidth}%`,
+                width: `${Math.min(plannedWidth, 100 - completedWidth)}%`,
                 backgroundColor: getBatteryColor(),
                 opacity: 0.45,
                 transition: "width 0.4s ease",

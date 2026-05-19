@@ -213,6 +213,7 @@ const Tasks = () => {
           tasks={tasks}
           dailyLimit={dailyLimit}
           googleDrain={googleDrain}
+          user={user}
         />
       )}
 
