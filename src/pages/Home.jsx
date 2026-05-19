@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import HeatMapGrid from "../components/HeatMap/HeatMapGrid";
 import AppLoader from "../components/Layout/AppLoader";
 import TaskDetailModal from "../components/Tasks/TaskDetailModal";
 
@@ -22,8 +21,6 @@ const Home = () => {
   const [tasks, setTasks] = useState([]);
   const [user, setUser] = useState(null);
   const [userName, setUserName] = useState("");
-  const [joinDate, setJoinDate] = useState(null);
-  const [heatmapData, setHeatmapData] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState(null);
   const [modalMode, setModalMode] = useState("view");
@@ -69,41 +66,6 @@ const Home = () => {
           setTasks(resTasks.data);
           setUser(resUser.data);
           setUserName(resUser.data.name || "");
-          setJoinDate(resUser.data.createdAt);
-
-          const weights = {
-            admin: 10,
-            physical: 20,
-            social: 30,
-            focus: 40,
-            stress: 45,
-          };
-          const dayStats = {};
-
-          resTasks.data.forEach((task) => {
-            const dateToUse = task.completedAt || task.updatedAt;
-            if (task.isCompleted && dateToUse) {
-              const d = new Date(dateToUse);
-              const dateKey = d.toLocaleDateString("sv-SE");
-              const energy = weights[task.category] || 10;
-              if (!dayStats[dateKey])
-                dayStats[dateKey] = { totalEnergy: 0, count: 0 };
-              dayStats[dateKey].totalEnergy += energy;
-              dayStats[dateKey].count += 1;
-            }
-          });
-
-          const finalizedMap = {};
-          Object.keys(dayStats).forEach((date) => {
-            const { totalEnergy, count } = dayStats[date];
-            let level = 1;
-            if (totalEnergy > 90) level = 4;
-            else if (totalEnergy > 60) level = 3;
-            else if (totalEnergy > 30) level = 2;
-            finalizedMap[date] = { level, count };
-          });
-
-          setHeatmapData(finalizedMap);
           setLoading(false);
         } catch (err) {
           console.error("Fetch error", err);
@@ -165,6 +127,13 @@ const Home = () => {
           new Date(t.dueDate).toLocaleDateString("sv-SE") === todayLocal)),
   );
 
+  const completedToday = tasks.filter(
+    (t) =>
+      t.isCompleted &&
+      t.completedAt &&
+      new Date(t.completedAt).toLocaleDateString("sv-SE") === todayLocal,
+  );
+
   if (!token) {
     return (
       <div className="container mt-5 py-5 text-center">
@@ -197,17 +166,7 @@ const Home = () => {
   }
 
   return (
-    <div className="container-fluid mt-4 px-lg-5">
-      <header className="mb-5 text-center">
-        <h1 className="display-5 fw-bold text-dark mb-1">
-          {greeting}
-          {userName ? `, ${userName}` : ""}
-        </h1>
-        <p className="text-muted small text-uppercase fw-bold ls-wide">
-          Your daily energy overview
-        </p>
-      </header>
-
+    <div className="container py-4" style={{ maxWidth: "900px" }}>
       <TaskDetailModal
         show={!!selectedTask}
         task={selectedTask}
@@ -221,119 +180,135 @@ const Home = () => {
         getCategoryStyle={getCategoryStyle}
       />
 
-      <div
-        className="row g-4 align-items-stretch"
-        style={{ minHeight: "380px" }}
-      >
-        <div className="col-lg-3">
+      <header className="mb-5">
+        <h1 className="fw-bold text-dark mb-1">
+          {greeting}
+          {userName ? `, ${userName}` : ""}
+        </h1>
+        <p className="text-muted small text-uppercase fw-bold">
+          Your daily energy overview
+        </p>
+      </header>
+
+      {/* Stats Row */}
+      <div className="row g-3 mb-4">
+        <div className="col-4">
           <div
-            className="card border-0 shadow-sm rounded-4 h-100 p-4"
+            className="card border-0 shadow-sm rounded-4 p-4 text-center h-100"
             style={{ backgroundColor: "#f3e5f5" }}
           >
-            <h6
-              className="text-uppercase fw-bold small mb-4"
-              style={{ color: "#7b1fa2" }}
+            <h1 className="display-5 fw-bold mb-0 text-dark">
+              {dueToday.length}
+            </h1>
+            <small
+              className="fw-bold text-uppercase text-muted"
+              style={{ fontSize: "10px" }}
             >
-              Overview
-            </h6>
-            <div className="flex-grow-1">
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                  <h1 className="display-5 fw-bold mb-0 text-dark">
-                    {dueToday.length}
-                  </h1>
-                  <small
-                    className="fw-bold text-uppercase opacity-75"
-                    style={{ fontSize: "10px" }}
-                  >
-                    Active Today
-                  </small>
-                </div>
-                <div className="text-end">
-                  <h1 className="display-5 fw-bold mb-0 text-danger">
-                    {overdue.length}
-                  </h1>
-                  <small
-                    className="fw-bold text-uppercase opacity-75"
-                    style={{ fontSize: "10px" }}
-                  >
-                    Overdue
-                  </small>
-                </div>
+              Active Today
+            </small>
+          </div>
+        </div>
+        <div className="col-4">
+          <div
+            className="card border-0 shadow-sm rounded-4 p-4 text-center h-100"
+            style={{ backgroundColor: "#fce4ec" }}
+          >
+            <h1 className="display-5 fw-bold mb-0 text-danger">
+              {overdue.length}
+            </h1>
+            <small
+              className="fw-bold text-uppercase text-muted"
+              style={{ fontSize: "10px" }}
+            >
+              Overdue
+            </small>
+          </div>
+        </div>
+        <div className="col-4">
+          <div
+            className="card border-0 shadow-sm rounded-4 p-4 text-center h-100"
+            style={{ backgroundColor: "#e8f5e9" }}
+          >
+            <h1 className="display-5 fw-bold mb-0" style={{ color: "#2e7d32" }}>
+              {completedToday.length}
+            </h1>
+            <small
+              className="fw-bold text-uppercase text-muted"
+              style={{ fontSize: "10px" }}
+            >
+              Done Today
+            </small>
+          </div>
+        </div>
+      </div>
+
+      {/* Today's Plan */}
+      <div className="card border-0 shadow-sm rounded-4 p-4">
+        <h6 className="text-dark fw-bold text-uppercase small mb-3">
+          📅 Today's Plan
+        </h6>
+
+        {overdue.length > 0 && (
+          <div className="mb-3">
+            {overdue.slice(0, 3).map((t) => (
+              <div
+                key={t._id}
+                className="p-3 mb-2 bg-danger bg-opacity-10 border-start border-danger border-3 rounded small fw-bold text-danger"
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  setSelectedTask(t);
+                  setModalMode("view");
+                }}
+              >
+                ⚠️ {t.title}
               </div>
+            ))}
+          </div>
+        )}
+
+        {dueToday.length > 0 ? (
+          dueToday.map((t) => (
+            <div
+              key={t._id}
+              className="p-3 mb-2 bg-light rounded-3 small fw-bold text-dark d-flex justify-content-between align-items-center"
+              style={{ cursor: "pointer" }}
+              onClick={() => {
+                setSelectedTask(t);
+                setModalMode("view");
+              }}
+            >
+              <span>{t.title}</span>
+              <span
+                className="badge rounded-pill px-2"
+                style={getCategoryStyle(t.category)}
+              >
+                {t.category}
+              </span>
             </div>
+          ))
+        ) : (
+          <div className="py-5 text-center text-muted border border-dashed rounded-4 d-flex flex-column align-items-center justify-content-center gap-2">
+            <span style={{ fontSize: "2rem" }}>☕</span>
+            <span className="fw-bold">Clear skies today!</span>
             <Link
               to="/tasks"
-              className="btn btn-white btn-sm rounded-pill w-100 fw-bold py-2 shadow-sm border mt-auto"
+              className="btn btn-dark btn-sm rounded-pill px-4 fw-bold mt-2"
             >
-              Manage Tasks
+              + Add a Task
             </Link>
           </div>
-        </div>
+        )}
 
-        <div className="col-lg-4">
-          <div className="card border-0 shadow-sm rounded-4 h-100 bg-white p-4">
-            <h6 className="text-dark fw-bold text-uppercase small mb-4">
-              📅 Today's Plan
-            </h6>
-            <div
-              className="overflow-auto flex-grow-1"
-              style={{ maxHeight: "250px" }}
+        {dueToday.length > 0 && (
+          <div className="text-end mt-3">
+            <Link
+              to="/tasks"
+              className="btn btn-dark btn-sm rounded-pill px-4 fw-bold"
             >
-              {overdue.length > 0 && (
-                <div className="mb-3">
-                  {overdue.slice(0, 2).map((t) => (
-                    <div
-                      key={t._id}
-                      className="p-3 mb-2 bg-danger bg-opacity-10 border-start border-danger border-3 rounded small fw-bold text-danger"
-                      style={{ cursor: "pointer" }}
-                      onClick={() => {
-                        setSelectedTask(t);
-                        setModalMode("view");
-                      }}
-                    >
-                      {t.title}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {dueToday.length > 0 ? (
-                dueToday.map((t) => (
-                  <div
-                    key={t._id}
-                    className="p-3 mb-2 bg-light rounded small fw-bold text-dark"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      setSelectedTask(t);
-                      setModalMode("view");
-                    }}
-                  >
-                    {t.title}
-                  </div>
-                ))
-              ) : (
-                <div className="p-5 text-center text-muted border border-dashed rounded-4 h-100 d-flex align-items-center justify-content-center">
-                  Clear skies today! ☕
-                </div>
-              )}
-            </div>
+              Manage Tasks →
+            </Link>
           </div>
-        </div>
-
-        <div className="col-lg-5">
-          <div className="card border-0 shadow-sm rounded-4 h-100 bg-white p-4 d-flex flex-column align-items-center">
-            <h6 className="text-muted fw-bold text-uppercase small mb-4 align-self-start">
-              Activity Overview
-            </h6>
-            <div className="d-flex align-items-center justify-content-center flex-grow-1 w-100">
-              <HeatMapGrid
-                data={heatmapData}
-                joinDate={joinDate}
-                daysToView={28}
-              />
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
