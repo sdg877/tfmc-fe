@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import EnergySlider from "../components/Energy/EnergySlider";
 import EnergyToggle from "../components/Energy/EnergyToggle";
-import HeatmapToggle from "../components/Energy/HeatmapToggle";
+import HeatmapToggle from "../components/HeatMap/HeatmapToggle";
 import GoogleConnect from "../components/Google/GoogleConnect";
 import CategoryManager from "../components/Energy/CategoryManager";
 
