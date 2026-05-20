@@ -132,16 +132,23 @@ const Tasks = () => {
     const newLoad = calculateLoad(tasks, googleDrain);
     setCurrentLoad(newLoad);
 
-    if (showEnergyBar) {
+    if (showEnergyBar && dailyLimit > 0) {
+      const currentPercent = Math.round((newLoad / dailyLimit) * 100);
       let reachedLevel = 0;
-      if (newLoad >= dailyLimit) reachedLevel = 100;
-      else if (newLoad >= dailyLimit * 0.9) reachedLevel = 90;
-      else if (newLoad >= dailyLimit * 0.8) reachedLevel = 80;
 
+      // Classify the exact alert tier
+      if (currentPercent >= 100) reachedLevel = 100;
+      else if (currentPercent >= 90) reachedLevel = 90;
+      else if (currentPercent >= 80) reachedLevel = 80;
+
+      // Clean local storage bypass reset: triggers if a brand new higher boundary tier is broken
       if (reachedLevel > 0 && reachedLevel > silencedLevel) {
         setWarningLevel(reachedLevel);
         setShowWarning(true);
         setFilter((prev) => ({ ...prev, hideNonUrgent: true }));
+      } else if (reachedLevel < silencedLevel) {
+        setSilencedLevel(reachedLevel);
+        localStorage.setItem("silencedEnergyLevel", reachedLevel.toString());
       }
     }
   }, [tasks, googleDrain, showEnergyBar, silencedLevel, dailyLimit]);
