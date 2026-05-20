@@ -6,8 +6,9 @@ const HeatMapGrid = ({ data, joinDate, daysToView = 28 }) => {
   const formatInternal = (d) => d.toLocaleDateString("sv-SE");
   const formatDisplay = (d) => d.toLocaleDateString("en-GB");
 
-  const getLevelColor = (level, isBeforeJoining) => {
+  const getLevelColor = (level, isBeforeJoining, isOverloaded) => {
     if (isBeforeJoining) return "#f1f3f5";
+    if (isOverloaded) return "#1a1a1a";
     switch (level) {
       case 4:
         return "#9b5de5";
@@ -23,8 +24,13 @@ const HeatMapGrid = ({ data, joinDate, daysToView = 28 }) => {
   };
 
   const today = new Date();
-  const joinDateObj = joinDate ? new Date(joinDate) : null;
-  const joinDateKey = joinDateObj ? formatInternal(joinDateObj) : null;
+  today.setHours(0, 0, 0, 0);
+
+  const pureJoinDate = joinDate ? new Date(joinDate) : null;
+  const joinDateComparison = pureJoinDate
+    ? new Date(pureJoinDate.getTime()).setHours(0, 0, 0, 0)
+    : null;
+  const joinDateKey = pureJoinDate ? formatInternal(pureJoinDate) : null;
 
   const days = Array.from({ length: daysToView }, (_, i) => {
     const d = new Date();
@@ -33,79 +39,121 @@ const HeatMapGrid = ({ data, joinDate, daysToView = 28 }) => {
     return {
       key: formatInternal(d),
       display: formatDisplay(d),
-      dateObj: new Date(d),
+      dateObj: d,
     };
   });
 
   return (
-    <div className="w-100 h-100 d-flex flex-column align-items-center justify-content-center py-2">
+    <div className="w-100 d-flex flex-column align-items-center py-2">
       <div className="text-center mb-4">
         <h5 className="fw-bold text-dark mb-1">Your Wins</h5>
         <p className="text-muted small">Last 4 weeks</p>
       </div>
 
-      <div className="d-flex justify-content-center w-100">
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, 1fr)",
-            gap: "12px",
-            width: "100%",
-            maxWidth: "500px",
-          }}
-          onMouseLeave={() => setHoveredDay(null)}
-        >
-          {days.map((day) => {
-            const dayInfo =
-              data && data[day.key] ? data[day.key] : { level: 0, count: 0 };
-            const isJoinDate = day.key === joinDateKey;
-            const isBeforeJoining =
-              joinDateObj && day.dateObj < joinDateObj.setHours(0, 0, 0, 0);
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7, 1fr)",
+          gap: "12px",
+          width: "100%",
+          maxWidth: "500px",
+        }}
+        onMouseLeave={() => setHoveredDay(null)}
+      >
+        {days.map((day) => {
+          const dayInfo =
+            data && data[day.key]
+              ? data[day.key]
+              : { level: 0, count: 0, energyUsed: 0, dailyLimit: 100 };
 
-            return (
-              <div
-                key={day.key}
-                onMouseEnter={() =>
-                  !isBeforeJoining &&
-                  setHoveredDay({
-                    date: day.display,
-                    count: dayInfo.count,
-                  })
-                }
-                style={{
-                  aspectRatio: "1 / 1",
-                  backgroundColor: getLevelColor(
-                    dayInfo.level,
-                    isBeforeJoining,
-                  ),
-                  borderRadius: "8px",
-                  border: isJoinDate ? "3px solid #4cc9f0" : "1px solid #eee",
-                  boxSizing: "border-box",
-                  cursor: isBeforeJoining ? "default" : "pointer",
-                  opacity: isBeforeJoining ? 0.4 : 1,
-                  transition: "transform 0.2s ease-in-out",
-                }}
-                className="heatmap-square"
-              />
-            );
-          })}
-        </div>
+          const isJoinDate = joinDateKey && day.key === joinDateKey;
+          const isBeforeJoining =
+            joinDateComparison && day.dateObj.getTime() < joinDateComparison;
+
+          const energyPercent =
+            dayInfo.dailyLimit > 0
+              ? Math.round((dayInfo.energyUsed / dayInfo.dailyLimit) * 100)
+              : 0;
+
+          const isOverloaded =
+            energyPercent >= 100 ||
+            dayInfo.isOverloaded ||
+            (dayInfo.energyUsed > 0 &&
+              dayInfo.energyUsed >= dayInfo.dailyLimit);
+
+          const displayLevel = isOverloaded ? 4 : dayInfo.level;
+
+          return (
+            <div
+              key={day.key}
+              onMouseEnter={() => {
+                if (isBeforeJoining) return;
+                setHoveredDay({
+                  date: day.display,
+                  energyPercent,
+                  isOverloaded,
+                });
+              }}
+              style={{
+                aspectRatio: "1 / 1",
+                backgroundColor: getLevelColor(
+                  displayLevel,
+                  isBeforeJoining,
+                  isOverloaded,
+                ),
+                borderRadius: "8px",
+                border: isJoinDate ? "3px solid #4cc9f0" : "1px solid #eee",
+                boxSizing: "border-box",
+                cursor: isBeforeJoining ? "default" : "pointer",
+                opacity: isBeforeJoining ? 0.4 : 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1rem",
+                transition: "transform 0.15s ease",
+                color: "transparent",
+              }}
+              className="heatmap-square"
+            >
+              {isOverloaded && !isBeforeJoining ? (
+                <span
+                  style={{
+                    pointerEvents: "none",
+                    lineHeight: 1,
+                    color: "#000",
+                  }}
+                >
+                  🔥
+                </span>
+              ) : (
+                ""
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <div className="mt-4 text-center" style={{ minHeight: "24px" }}>
         {hoveredDay ? (
-          <p className="text-dark fw-bold m-0 animate-fade-in">
-            {hoveredDay.date}: {hoveredDay.count}{" "}
-            {hoveredDay.count === 1 ? "task" : "tasks"}
+          <p className="text-dark fw-bold m-0">
+            {hoveredDay.date} — {hoveredDay.energyPercent}% energy used
+            {hoveredDay.isOverloaded && (
+              <span
+                className="text-danger fw-bold ms-2"
+                style={{ fontSize: "0.8rem" }}
+              >
+                🔥 Overloaded
+              </span>
+            )}
           </p>
         ) : (
           <p className="text-muted m-0">Consistency is key ✨</p>
         )}
       </div>
 
-      {joinDateObj && (
+      {pureJoinDate && (
         <p className="text-muted small mt-3 pt-3 border-top w-75 text-center">
-          Joined: <strong>{formatDisplay(joinDateObj)}</strong>
+          Joined: <strong>{formatDisplay(pureJoinDate)}</strong>
         </p>
       )}
     </div>
