@@ -359,8 +359,15 @@ const Tasks = () => {
                 return true;
               })
               .sort((a, b) => {
-                if (a.isCompleted !== b.isCompleted)
+                if (a.isCompleted !== b.isCompleted) {
                   return a.isCompleted ? 1 : -1;
+                }
+
+                if (a.isCompleted && b.isCompleted) {
+                  const dateA = new Date(a.completedAt || a.updatedAt || 0);
+                  const dateB = new Date(b.completedAt || b.updatedAt || 0);
+                  return dateB - dateA;
+                }
                 return new Date(b.createdAt) - new Date(a.createdAt);
               })
               .map((t) => (
