@@ -23,9 +23,10 @@ const GoogleConnect = ({ isConnected, onSyncSuccess }) => {
     },
     flow: "auth-code",
     scope: "https://www.googleapis.com/auth/calendar.events",
+    overrideScope: true,
+    prompt: "consent",
   });
 
-  // The actual logic that was inside the old confirm box
   const confirmDisconnect = async () => {
     setShowModal(false);
     try {
@@ -34,7 +35,12 @@ const GoogleConnect = ({ isConnected, onSyncSuccess }) => {
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      onSyncSuccess(res.data.user || res.data);
+
+      if (res.data) {
+        onSyncSuccess(
+          res.data.user || res.data._id ? res.data : { googleConnected: false },
+        );
+      }
     } catch (err) {
       console.error("Disconnect Error:", err);
     }
