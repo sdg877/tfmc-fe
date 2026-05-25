@@ -5,7 +5,9 @@ const EnergyWarningModal = ({ show, onClose, energyUsed, limit, level }) => {
 
   if (!show) return null;
 
-  const actualPercent = Math.round((energyUsed / limit) * 100);
+  const cleanEnergyUsed = Number(energyUsed) || 0;
+  const cleanLimit = Number(limit) || 100;
+  const actualPercent = Math.round((cleanEnergyUsed / cleanLimit) * 100);
 
   const getMessage = () => {
     if (level >= 100)
@@ -64,7 +66,7 @@ const EnergyWarningModal = ({ show, onClose, energyUsed, limit, level }) => {
 
             <div className="p-3 bg-light rounded-3 d-inline-block px-5 border">
               <span className="h2 fw-bold mb-0 text-dark">
-                {energyUsed} / {limit}
+                {cleanEnergyUsed} / {cleanLimit}
               </span>
               <div className="text-muted small fw-bold mt-1">UNITS SPENT</div>
             </div>
