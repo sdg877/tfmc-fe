@@ -359,6 +359,7 @@ const Tasks = () => {
                 return true;
               })
               .sort((a, b) => {
+                // 1. Keep active tasks at the top, completed tasks at the bottom
                 if (a.isCompleted !== b.isCompleted) {
                   return a.isCompleted ? 1 : -1;
                 }
@@ -368,6 +369,7 @@ const Tasks = () => {
                   const dateB = new Date(b.completedAt || b.updatedAt || 0);
                   return dateB - dateA;
                 }
+
                 return new Date(b.createdAt) - new Date(a.createdAt);
               })
               .map((t) => (
