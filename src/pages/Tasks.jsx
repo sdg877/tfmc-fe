@@ -48,18 +48,27 @@ const Tasks = () => {
 
   const calculateLoad = (taskList = [], calendarDrain = 0) => {
     if (!taskList || taskList.length === 0) return Number(calendarDrain);
-    const todayString = new Date().toLocaleDateString("en-GB");
+
+    const todayString = new Date().toLocaleDateString("sv-SE");
 
     const totalPoints = taskList.reduce((total, t) => {
-      const isRelevant =
-        (t.isCompleted &&
-          t.updatedAt &&
-          new Date(t.updatedAt).toLocaleDateString("en-GB") === todayString) ||
-        t.isPlannedForToday ||
-        (t.dueDate &&
-          new Date(t.dueDate).toLocaleDateString("en-GB") === todayString);
+      const taskDate = t.completedAt || t.dueDate;
+      const localTaskDate = taskDate
+        ? new Date(taskDate).toLocaleDateString("sv-SE")
+        : null;
 
-      if (isRelevant) {
+      const matchesToday = localTaskDate === todayString;
+      const completedToday = t.isCompleted && matchesToday;
+      const plannedForToday =
+        !t.isCompleted && (t.isPlannedForToday || matchesToday);
+
+      if (completedToday || plannedForToday) {
+        const taskWeight = Number(t.energyRequired) || Number(t.energyPoints);
+
+        if (taskWeight) {
+          return total + taskWeight;
+        }
+
         const catSettings = user?.categories?.find(
           (c) => c.name.toLowerCase() === t.category?.toLowerCase(),
         );
@@ -136,17 +145,19 @@ const Tasks = () => {
       const currentPercent = Math.round((newLoad / dailyLimit) * 100);
       let reachedLevel = 0;
 
-      // Classify the exact alert tier
       if (currentPercent >= 100) reachedLevel = 100;
       else if (currentPercent >= 90) reachedLevel = 90;
       else if (currentPercent >= 80) reachedLevel = 80;
 
-      // Clean local storage bypass reset: triggers if a brand new higher boundary tier is broken
-      if (reachedLevel > 0 && reachedLevel > silencedLevel) {
+      if (
+        reachedLevel > 0 &&
+        reachedLevel > silencedLevel &&
+        currentPercent >= reachedLevel
+      ) {
         setWarningLevel(reachedLevel);
         setShowWarning(true);
         setFilter((prev) => ({ ...prev, hideNonUrgent: true }));
-      } else if (reachedLevel < silencedLevel) {
+      } else if (currentPercent < silencedLevel) {
         setSilencedLevel(reachedLevel);
         localStorage.setItem("silencedEnergyLevel", reachedLevel.toString());
       }
