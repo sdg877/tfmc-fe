@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import EnergySlider from "../components/Energy/EnergySlider";
 import EnergyToggle from "../components/Energy/EnergyToggle";
 import HeatmapToggle from "../components/HeatMap/HeatmapToggle";
@@ -12,6 +13,54 @@ const Settings = ({ user, setUser }) => {
     const saved = localStorage.getItem("showHeatMap");
     return saved !== null ? JSON.parse(saved) : true;
   });
+
+  const baseURL = import.meta.env.VITE_API_URL;
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    const checkInactivity = async () => {
+      try {
+        const res = await axios.get(`${baseURL}/tasks`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const tasks = res.data;
+
+        const completedDates = new Set();
+        tasks.forEach((task) => {
+          const dateToUse = task.completedAt || task.updatedAt;
+          if (task.isCompleted && dateToUse) {
+            const dateKey = new Date(dateToUse).toLocaleDateString("sv-SE");
+            completedDates.add(dateKey);
+          }
+        });
+
+        const todayObj = new Date();
+        todayObj.setHours(0, 0, 0, 0);
+        let consecutiveMissedDays = 0;
+
+        for (let i = 1; i <= 28; i++) {
+          const checkDate = new Date();
+          checkDate.setHours(0, 0, 0, 0);
+          checkDate.setDate(todayObj.getDate() - i);
+          const dateKey = checkDate.toLocaleDateString("sv-SE");
+
+          if (!completedDates.has(dateKey)) {
+            consecutiveMissedDays++;
+          } else {
+            break;
+          }
+        }
+
+        if (consecutiveMissedDays > 3 && showHeatMap === true) {
+          handleHeatMapToggleUpdate(false);
+        }
+      } catch (err) {
+        console.error("Failed inactivity check", err);
+      }
+    };
+
+    if (token && user) checkInactivity();
+  }, [user, token]);
 
   if (!user)
     return (
@@ -34,9 +83,19 @@ const Settings = ({ user, setUser }) => {
     }));
   };
 
-  const handleHeatMapToggleUpdate = (val) => {
+  const handleHeatMapToggleUpdate = async (val) => {
     setShowHeatMap(val);
     localStorage.setItem("showHeatMap", JSON.stringify(val));
+
+    try {
+      await axios.put(
+        `${baseURL}/users/profile/identity`,
+        { settings: { ...user.settings, showHeatMap: val } },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+    } catch (err) {
+      console.error("Failed to update heatmap setting", err);
+    }
   };
 
   return (
