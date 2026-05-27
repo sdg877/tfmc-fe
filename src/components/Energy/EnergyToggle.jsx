@@ -9,7 +9,7 @@ const EnergyToggle = ({ showEnergyBar, onUpdate }) => {
     const newValue = !showEnergyBar;
     try {
       await axios.put(
-        `${baseURL}/users/profile`,
+        `${baseURL}/users/profile/energy`,
         { settings: { showEnergyBar: newValue } },
         { headers: { Authorization: `Bearer ${token}` } },
       );
