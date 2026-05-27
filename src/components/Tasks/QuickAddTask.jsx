@@ -13,7 +13,6 @@ const QuickAddTask = ({ onTaskAdded, user }) => {
     const token = localStorage.getItem("token");
     const baseURL = import.meta.env.VITE_API_URL;
 
-    // Pick the first category available as a fallback weight, or default to zero
     const defaultCategory = user?.categories?.[0]?.name || "";
     const defaultCost = user?.categories?.[0]?.weight || 0;
 
