@@ -9,7 +9,6 @@ const QuickAddTask = ({ onTaskAdded, user }) => {
     e.preventDefault();
     if (!title.trim()) return;
 
-    setLoading(false);
     const token = localStorage.getItem("token");
     const baseURL = import.meta.env.VITE_API_URL;
 
@@ -31,12 +30,11 @@ const QuickAddTask = ({ onTaskAdded, user }) => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      // Pass the saved task up to update your array state instantly
       onTaskAdded(res.data);
       setTitle("");
     } catch (err) {
-      console.error("Quick task dump failed:", err);
-      alert(err.response?.data?.message || "Failed to dump task.");
+      console.error("Quick add failed:", err);
+      alert(err.response?.data?.message || "Failed to add task.");
     } finally {
       setLoading(false);
     }
@@ -45,7 +43,7 @@ const QuickAddTask = ({ onTaskAdded, user }) => {
   return (
     <div className="p-2 bg-white">
       <h6 className="text-uppercase fw-bold text-muted small mb-3 px-1">
-        Quick Brain Dump
+        Quick Add
       </h6>
       <form onSubmit={handleSubmit} className="d-flex gap-2">
         <input
@@ -53,24 +51,20 @@ const QuickAddTask = ({ onTaskAdded, user }) => {
           className="form-control form-control-lg border-0 bg-light rounded-pill px-4 shadow-none fs-6"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Type a task name and hit Enter to dump..."
+          placeholder="Type a task name and press Enter..."
           disabled={loading}
           required
         />
-        <button
-          type="submit"
+        <button 
+          type="submit" 
           className="btn btn-dark rounded-pill px-4 fw-bold small"
           disabled={loading || !title.trim()}
         >
-          {loading ? "..." : "Dump"}
+          {loading ? "Saving..." : "Add"}
         </button>
       </form>
-      <small
-        className="text-muted d-block mt-2 px-3"
-        style={{ fontSize: "0.75rem" }}
-      >
-        Saved to your backlog. You can open it later to add weights, timings, or
-        connect to Google Calendar.
+      <small className="text-muted d-block mt-2 px-3" style={{ fontSize: "0.75rem" }}>
+        Saved to your backlog. You can open it later to add weights, timings, or connect to Google Calendar.
       </small>
     </div>
   );
