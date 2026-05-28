@@ -23,25 +23,40 @@ const EnergyProgress = ({ tasks, dailyLimit, user }) => {
   const calculateEnergyBreakdown = (list) => {
     if (!list || list.length === 0) return { completed: 0, planned: 0 };
 
-    const today = new Date().toLocaleDateString("en-GB");
+    // Get midnight today as a timestamp for clean date comparisons
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todayString = todayStart.toLocaleDateString("en-GB");
 
     return list.reduce(
       (acc, t) => {
         const isPlannedToday = t.isPlannedForToday === true;
+
+        // 1. Check if the task is strictly due today
         const isDueToday =
           t.dueDate &&
-          new Date(t.dueDate).toLocaleDateString("en-GB") === today;
+          new Date(t.dueDate).toLocaleDateString("en-GB") === todayString;
+
+        // 2. Check if the task is overdue (due date is in the past)
+        const isOverdue =
+          t.dueDate &&
+          new Date(t.dueDate).setHours(0, 0, 0, 0) < todayStart.getTime();
 
         const completedToday =
           t.isCompleted &&
           t.completedAt &&
-          new Date(t.completedAt).toLocaleDateString("en-GB") === today;
+          new Date(t.completedAt).toLocaleDateString("en-GB") === todayString;
 
         const taskWeight = getCategoryWeight(t);
 
         if (completedToday) {
           acc.completed += taskWeight;
-        } else if (!t.isCompleted && (isPlannedToday || isDueToday)) {
+        } else if (
+          !t.isCompleted &&
+          (isPlannedToday || isDueToday || isOverdue)
+        ) {
+          // Included overdue tasks here 👆
           acc.planned += taskWeight;
         }
         return acc;
