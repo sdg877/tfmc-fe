@@ -41,31 +41,35 @@ const QuickAddTask = ({ onTaskAdded, user }) => {
   };
 
   return (
-    <div className="p-2 bg-white">
-      <h6 className="text-uppercase fw-bold text-muted small mb-3 px-1">
-        Quick Add
-      </h6>
-      <form onSubmit={handleSubmit} className="d-flex gap-2">
+    <div className="card p-4 mb-3 shadow-sm border rounded-4 w-100 bg-white">
+      <div className="mb-2">
+        <h6 className="fw-bold text-uppercase text-muted" style={{ fontSize: "0.75rem", letterSpacing: "0.05em" }}>
+          Quick Add Task
+        </h6>
+      </div>
+      
+      <form onSubmit={handleSubmit} className="d-flex gap-2 my-1">
         <input
           type="text"
-          className="form-control form-control-lg border-0 bg-light rounded-pill px-4 shadow-none fs-6"
+          className="form-control form-control-lg border-0 bg-light rounded-pill px-4 shadow-none fs-6 flex-grow-1"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Type a task name and press Enter..."
+          placeholder="Type a task name and press Enter to save..."
           disabled={loading}
           required
         />
         <button 
           type="submit" 
-          className="btn btn-dark rounded-pill px-4 fw-bold small"
+          className="btn btn-dark rounded-pill px-4 fw-bold"
           disabled={loading || !title.trim()}
         >
           {loading ? "Saving..." : "Add"}
         </button>
       </form>
-      <small className="text-muted d-block mt-2 px-3" style={{ fontSize: "0.75rem" }}>
+      
+      <span className="text-muted small mt-1 d-block px-2" style={{ fontSize: "0.72rem" }}>
         Saved to your backlog. You can open it later to add weights, timings, or connect to Google Calendar.
-      </small>
+      </span>
     </div>
   );
 };
