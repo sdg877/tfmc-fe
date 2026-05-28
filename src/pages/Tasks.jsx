@@ -51,7 +51,9 @@ const Tasks = () => {
   const calculateLoad = (taskList = [], calendarDrain = 0) => {
     if (!taskList || taskList.length === 0) return Number(calendarDrain);
 
-    const todayString = new Date().toLocaleDateString("sv-SE");
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+    const todayString = todayMidnight.toLocaleDateString("sv-SE");
 
     const totalPoints = taskList.reduce((total, t) => {
       const taskDate = t.completedAt || t.dueDate;
@@ -61,8 +63,14 @@ const Tasks = () => {
 
       const matchesToday = localTaskDate === todayString;
       const completedToday = t.isCompleted && matchesToday;
+
+      const isOverdue =
+        !t.isCompleted &&
+        t.dueDate &&
+        new Date(t.dueDate).setHours(0, 0, 0, 0) < todayMidnight.getTime();
+
       const plannedForToday =
-        !t.isCompleted && (t.isPlannedForToday || matchesToday);
+        !t.isCompleted && (t.isPlannedForToday || matchesToday || isOverdue);
 
       if (completedToday || plannedForToday) {
         const taskWeight = Number(t.energyRequired) || Number(t.energyPoints);
@@ -204,31 +212,36 @@ const Tasks = () => {
   );
 
   return (
-    <div className="container py-4" style={{ maxWidth: "1000px" }}>
-      <header className="mb-4">
+    <div className="container py-4" style={{ maxWidth: "720px" }}>
+      <header className="mb-4 text-center">
         <h2 className="fw-bold text-dark mb-1">The Fast Minds Club</h2>
-        <p className="text-muted small text-uppercase fw-bold ls-wide">
+        <p className="text-muted small text-uppercase fw-bold ls-wide mb-0">
           Organise your day{user?.name ? `, ${user.name}` : ""}
         </p>
       </header>
 
-      <ul className="nav nav-pills nav-fill mb-4 bg-light p-1 rounded-pill shadow-sm border">
-        {["today", "all", "add"].map((tab) => (
-          <li className="nav-item" key={tab}>
-            <button
-              className={`nav-link rounded-pill fw-bold ${activeTab === tab ? "active bg-dark text-white" : "text-dark"}`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab === "add"
-                ? "+ Add Task"
-                : tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          </li>
-        ))}
-      </ul>
+      <div className="d-flex justify-content-center mb-4">
+        <ul
+          className="nav nav-pills bg-light p-1 rounded-pill shadow-sm border"
+          style={{ width: "fit-content" }}
+        >
+          {["today", "all", "add"].map((tab) => (
+            <li className="nav-item" key={tab}>
+              <button
+                className={`nav-link rounded-pill fw-bold px-4 ${activeTab === tab ? "active bg-dark text-white" : "text-dark"}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab === "add"
+                  ? "+ Add Detailed"
+                  : tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {showEnergyBar && activeTab !== "add" && (
-        <div className="mb-4">
+        <div className="mb-4 px-2">
           <EnergyProgress
             tasks={tasks}
             dailyLimit={dailyLimit}
@@ -238,9 +251,8 @@ const Tasks = () => {
         </div>
       )}
 
-      {/* Restricted to Today Tab Only */}
       {activeTab === "today" && (
-        <div className="mb-3 px-1">
+        <div className="mb-3 px-2">
           <button
             type="button"
             className="btn btn-link btn-sm text-decoration-none p-0 text-muted fw-bold shadow-none"
@@ -251,15 +263,36 @@ const Tasks = () => {
         </div>
       )}
 
-      {activeTab === "today" && showQuickAdd && (
-        <div className="bg-white p-3 rounded-4 shadow-sm border mb-4">
-          <QuickAddTask
-            onTaskAdded={(newTask) => {
-              handleTaskAdded(newTask);
-              setShowQuickAdd(false);
-            }}
-            user={user}
-          />
+      {activeTab === "today" && (
+        <div className="fade-in px-2">
+          {showQuickAdd && (
+            <QuickAddTask
+              onTaskAdded={(newTask) => handleTaskAdded(newTask)}
+              user={user}
+            />
+          )}
+
+          {todayTasks.length > 0 ? (
+            <div className="list-group list-group-flush shadow-sm rounded-4 overflow-hidden border mt-3">
+              {todayTasks.map((t) => (
+                <TaskItem
+                  key={t._id}
+                  task={t}
+                  user={user}
+                  setTasks={setTasks}
+                  onSelect={handleSelectTask}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white p-5 text-center rounded-4 shadow-sm border mt-3">
+              <div className="mb-2" style={{ fontSize: "2rem" }}>
+                ✨
+              </div>
+              <h4 className="fw-bold text-dark">All caught up!</h4>
+              <p className="text-muted mb-0">Your plate is clear for today.</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -305,35 +338,12 @@ const Tasks = () => {
         getCategoryStyle={getCategoryStyle}
       />
 
-      {activeTab === "today" && (
-        <div className="fade-in">
-          {todayTasks.length > 0 ? (
-            <div className="list-group list-group-flush shadow-sm rounded-4 overflow-hidden border">
-              {todayTasks.map((t) => (
-                <TaskItem
-                  key={t._id}
-                  task={t}
-                  user={user}
-                  setTasks={setTasks}
-                  onSelect={handleSelectTask}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white p-5 text-center rounded-4 shadow-sm border">
-              <h4 className="fw-bold text-dark">All caught up!</h4>
-              <p className="text-muted mb-4">Your plate is clear for today.</p>
-            </div>
-          )}
-        </div>
-      )}
-
       {activeTab === "all" && (
-        <div className="fade-in">
-          <div className="d-flex justify-content-between align-items-center mb-3 px-1">
+        <div className="fade-in px-2">
+          <div className="d-flex justify-content-between align-items-center mb-3 px-1 bg-light p-2 rounded-4 border shadow-sm small">
             <div className="d-flex gap-2 align-items-center">
               <select
-                className="form-select form-select-sm w-auto border-0 bg-light fw-bold rounded-pill px-3 shadow-sm"
+                className="form-select form-select-sm w-auto border-0 bg-white fw-bold rounded-pill px-3 shadow-none"
                 value={filter.category}
                 onChange={(e) =>
                   setFilter({ ...filter, category: e.target.value })
@@ -346,9 +356,9 @@ const Tasks = () => {
                   </option>
                 ))}
               </select>
-              <div className="form-check form-switch small ms-2">
+              <div className="form-check form-switch ms-2 mb-0 d-flex align-items-center gap-2">
                 <input
-                  className="form-check-input"
+                  className="form-check-input mt-0"
                   type="checkbox"
                   id="hideNonUrgent"
                   checked={filter.hideNonUrgent}
@@ -357,24 +367,26 @@ const Tasks = () => {
                   }
                 />
                 <label
-                  className="form-check-label text-muted fw-bold"
+                  className="form-check-label text-muted fw-bold mb-0"
                   htmlFor="hideNonUrgent"
+                  style={{ cursor: "pointer" }}
                 >
                   Hide non-urgent
                 </label>
               </div>
             </div>
-            <div className="form-check form-switch small">
+            <div className="form-check form-switch mb-0 d-flex align-items-center gap-2">
               <input
-                className="form-check-input"
+                className="form-check-input mt-0"
                 type="checkbox"
                 id="showComp"
                 checked={showCompleted}
                 onChange={() => setShowCompleted(!showCompleted)}
               />
               <label
-                className="form-check-label text-muted fw-bold"
+                className="form-check-label text-muted fw-bold mb-0"
                 htmlFor="showComp"
+                style={{ cursor: "pointer" }}
               >
                 Show Completed
               </label>
@@ -426,7 +438,7 @@ const Tasks = () => {
       )}
 
       {activeTab === "add" && (
-        <div className="bg-white p-4 rounded-4 shadow-sm border">
+        <div className="bg-white p-4 rounded-4 shadow-sm border mx-2">
           <AddTask
             onTaskAdded={(task) => {
               handleTaskAdded(task);
