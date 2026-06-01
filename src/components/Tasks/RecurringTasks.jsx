@@ -1,4 +1,4 @@
-// components/Settings/RecurringTasks.jsx
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -14,7 +14,6 @@ const RecurringTasks = () => {
         const res = await axios.get(`${baseURL}/tasks`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        // Filter out completed iterations so you only see the active templates
         const activeTemplates = res.data.filter(t => t.isRecurring && !t.isCompleted);
         setRecurringTasks(activeTemplates);
       } catch (err) {
