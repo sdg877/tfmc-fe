@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -14,7 +13,9 @@ const RecurringTasks = () => {
         const res = await axios.get(`${baseURL}/tasks`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const activeTemplates = res.data.filter(t => t.isRecurring && !t.isCompleted);
+        const activeTemplates = res.data.filter(
+          (t) => t.isRecurring === true && !t.isCompleted,
+        );
         setRecurringTasks(activeTemplates);
       } catch (err) {
         console.error("Failed to load recurring patterns", err);
@@ -30,9 +31,9 @@ const RecurringTasks = () => {
       const res = await axios.put(
         `${baseURL}/tasks/${id}`,
         { isRecurring: false, recurrence: "none" },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-      setRecurringTasks(prev => prev.filter(t => t._id !== id));
+      setRecurringTasks((prev) => prev.filter((t) => t._id !== id));
     } catch (err) {
       console.error("Failed to update task recurrence", err);
     }
@@ -54,16 +55,26 @@ const RecurringTasks = () => {
       ) : (
         <div className="list-group list-group-flush rounded-3 border overflow-hidden">
           {recurringTasks.map((task) => (
-            <div key={task._id} className="list-group-item d-flex justify-content-between align-items-center p-3 bg-white">
+            <div
+              key={task._id}
+              className="list-group-item d-flex justify-content-between align-items-center p-3 bg-white"
+            >
               <div>
                 <h6 className="fw-bold text-dark mb-1">{task.title}</h6>
                 <div className="d-flex gap-2 align-items-center">
-                  <span className="badge bg-secondary text-capitalize rounded-pill" style={{ fontSize: "0.7rem" }}>
+                  <span
+                    className="badge bg-secondary text-capitalize rounded-pill"
+                    style={{ fontSize: "0.7rem" }}
+                  >
                     🔄 {task.recurrence}
                   </span>
                   {task.dueDate && (
-                    <small className="text-muted" style={{ fontSize: "0.72rem" }}>
-                      Next due: {new Date(task.dueDate).toLocaleDateString("en-GB")}
+                    <small
+                      className="text-muted"
+                      style={{ fontSize: "0.72rem" }}
+                    >
+                      Next due:{" "}
+                      {new Date(task.dueDate).toLocaleDateString("en-GB")}
                     </small>
                   )}
                 </div>
