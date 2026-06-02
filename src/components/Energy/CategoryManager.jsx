@@ -13,16 +13,16 @@ const CategoryManager = ({ user, onUpdate }) => {
   const baseURL = import.meta.env.VITE_API_URL;
 
   const pastelPalette = [
-    { bg: "#f3e5f5", text: "#7b1fa2", border: "#ce93d8" },
-    { bg: "#e8f5e9", text: "#2e7d32", border: "#a5d6a7" },
-    { bg: "#e3f2fd", text: "#1565c0", border: "#90caf9" },
-    { bg: "#fff3e0", text: "#e65100", border: "#ffcc80" },
-    { bg: "#fce4ec", text: "#c2185b", border: "#f48fb1" },
-    { bg: "#f1f8e9", text: "#558b2f", border: "#c5e1a5" },
-    { bg: "#e0f7fa", text: "#00838f", border: "#b2ebf2" },
-    { bg: "#fff9c4", text: "#fbc02d", border: "#fff59d" },
-    { bg: "#efebe9", text: "#4e342e", border: "#d7ccc8" },
-    { bg: "#ede7f6", text: "#4527a0", border: "#d1c4e9" },
+    { bg: "#FFF0F5", text: "#C71585", border: "#FFB6C1" },
+    { bg: "#E6F3FF", text: "#1D4ED8", border: "#B9E0FF" },
+    { bg: "#EAF9EE", text: "#166534", border: "#C1E7CC" },
+    { bg: "#FFF0E5", text: "#C2410C", border: "#FFD3B6" },
+    { bg: "#F3E8FF", text: "#6B21A8", border: "#E9D5FF" },
+    { bg: "#E0F2FE", text: "#0369A1", border: "#BAE6FD" },
+    { bg: "#FDF2F8", text: "#9D174D", border: "#FCE7F3" },
+    { bg: "#F0FDFA", text: "#0F766E", border: "#CCFBF1" },
+    { bg: "#F5F5F7", text: "#3A3A3C", border: "#D1D1D6" },
+    { bg: "#FFEAEF", text: "#991B1B", border: "#FCA5A5" },
   ];
 
   const getStyle = (index) => pastelPalette[index % pastelPalette.length];
@@ -74,7 +74,6 @@ const CategoryManager = ({ user, onUpdate }) => {
   const handleAdd = async () => {
     if (!newCat.name || user.categories?.length >= 10) return;
 
-    // Normalise strings to strip spaces and ignore case matching
     const cleanNewName = newCat.name.trim().toLowerCase();
 
     const isDuplicate = user.categories?.some(

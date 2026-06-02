@@ -12,13 +12,13 @@ const pastelPalette = [
   { bg: "#FFF0F5", text: "#C71585", border: "#FFB6C1" },
   { bg: "#E6F3FF", text: "#1D4ED8", border: "#B9E0FF" },
   { bg: "#EAF9EE", text: "#166534", border: "#C1E7CC" },
-  { bg: "#FFF8E7", text: "#B45309", border: "#FFE4A0" },
+  { bg: "#FFF0E5", text: "#C2410C", border: "#FFD3B6" },
   { bg: "#F3E8FF", text: "#6B21A8", border: "#E9D5FF" },
   { bg: "#E0F2FE", text: "#0369A1", border: "#BAE6FD" },
-  { bg: "#FFFBEB", text: "#B45309", border: "#FDE68A" },
-  { bg: "#FDFFEE", text: "#4D7C0F", border: "#E6F4A2" },
   { bg: "#FDF2F8", text: "#9D174D", border: "#FCE7F3" },
   { bg: "#F0FDFA", text: "#0F766E", border: "#CCFBF1" },
+  { bg: "#F5F5F7", text: "#3A3A3C", border: "#D1D1D6" },
+  { bg: "#FFEAEF", text: "#991B1B", border: "#FCA5A5" },
 ];
 
 const Tasks = () => {

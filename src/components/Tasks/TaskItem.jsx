@@ -3,16 +3,16 @@ import axios from "axios";
 import DeleteTask from "./DeleteTask";
 
 const pastelPalette = [
-  { bg: "#f3e5f5", text: "#7b1fa2", border: "#ce93d8" },
-  { bg: "#e8f5e9", text: "#2e7d32", border: "#a5d6a7" },
-  { bg: "#e3f2fd", text: "#1565c0", border: "#90caf9" },
-  { bg: "#fff3e0", text: "#e65100", border: "#ffcc80" },
-  { bg: "#fce4ec", text: "#c2185b", border: "#f48fb1" },
-  { bg: "#e0f7fa", text: "#00838f", border: "#4dd0e1" },
-  { bg: "#fff9c4", text: "#fbc02d", border: "#fff176" },
-  { bg: "#fbe9e7", text: "#d84315", border: "#ffab91" },
-  { bg: "#ede7f6", text: "#4527a0", border: "#b39ddb" },
-  { bg: "#f1f8e9", text: "#33691e", border: "#9ccc65" },
+  { bg: "#FFF0F5", text: "#C71585", border: "#FFB6C1" },
+  { bg: "#E6F3FF", text: "#1D4ED8", border: "#B9E0FF" },
+  { bg: "#EAF9EE", text: "#166534", border: "#C1E7CC" },
+  { bg: "#FFF0E5", text: "#C2410C", border: "#FFD3B6" },
+  { bg: "#F3E8FF", text: "#6B21A8", border: "#E9D5FF" },
+  { bg: "#E0F2FE", text: "#0369A1", border: "#BAE6FD" },
+  { bg: "#FDF2F8", text: "#9D174D", border: "#FCE7F3" },
+  { bg: "#F0FDFA", text: "#0F766E", border: "#CCFBF1" },
+  { bg: "#F5F5F7", text: "#3A3A3C", border: "#D1D1D6" },
+  { bg: "#FFEAEF", text: "#991B1B", border: "#FCA5A5" },
 ];
 
 const TaskItem = ({ task, setTasks, onSelect, user }) => {
@@ -118,7 +118,6 @@ const TaskItem = ({ task, setTasks, onSelect, user }) => {
       ? "#e9ecef"
       : currentStyle.backgroundColor,
     color: task.isCompleted ? "#6c757d" : currentStyle.color,
-    // Restored the dynamic border line to map cleanly to category properties
     border: `2px solid ${task.isCompleted ? "#ced4da" : currentStyle.borderColor}`,
     boxShadow: "2px 4px 10px rgba(0, 0, 0, 0.06)",
     aspectRatio: "1 / 1",
