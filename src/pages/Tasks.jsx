@@ -9,16 +9,16 @@ import AppLoader from "../components/Layout/AppLoader";
 import TaskDetailModal from "../components/Tasks/TaskDetailModal";
 
 const pastelPalette = [
-  { bg: "#f3e5f5", text: "#7b1fa2", border: "#ce93d8" },
-  { bg: "#e8f5e9", text: "#2e7d32", border: "#a5d6a7" },
-  { bg: "#e3f2fd", text: "#1565c0", border: "#90caf9" },
-  { bg: "#fff3e0", text: "#e65100", border: "#ffcc80" },
-  { bg: "#fce4ec", text: "#c2185b", border: "#f48fb1" },
-  { bg: "#f1f8e9", text: "#558b2f", border: "#c5e1a5" },
-  { bg: "#e0f7fa", text: "#00838f", border: "#b2ebf2" },
-  { bg: "#fff9c4", text: "#fbc02d", border: "#fff59d" },
-  { bg: "#efebe9", text: "#4e342e", border: "#d7ccc8" },
-  { bg: "#ede7f6", text: "#4527a0", border: "#d1c4e9" },
+  { bg: "#FFF0F5", text: "#C71585", border: "#FFB6C1" },
+  { bg: "#E6F3FF", text: "#1D4ED8", border: "#B9E0FF" },
+  { bg: "#EAF9EE", text: "#166534", border: "#C1E7CC" },
+  { bg: "#FFF8E7", text: "#B45309", border: "#FFE4A0" },
+  { bg: "#F3E8FF", text: "#6B21A8", border: "#E9D5FF" },
+  { bg: "#E0F2FE", text: "#0369A1", border: "#BAE6FD" },
+  { bg: "#FFFBEB", text: "#B45309", border: "#FDE68A" },
+  { bg: "#FDFFEE", text: "#4D7C0F", border: "#E6F4A2" },
+  { bg: "#FDF2F8", text: "#9D174D", border: "#FCE7F3" },
+  { bg: "#F0FDFA", text: "#0F766E", border: "#CCFBF1" },
 ];
 
 const Tasks = () => {
@@ -105,7 +105,7 @@ const Tasks = () => {
     return {
       backgroundColor: colors.bg,
       color: colors.text,
-      border: `1px solid ${colors.border}`,
+      border: `2px solid ${colors.border}`,
     };
   };
 
@@ -273,7 +273,13 @@ const Tasks = () => {
           )}
 
           {todayTasks.length > 0 ? (
-            <div className="list-group list-group-flush shadow-sm rounded-4 overflow-hidden border mt-3">
+            <div
+              className="d-grid gap-3 mt-3"
+              style={{
+                gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+                alignItems: "start",
+              }}
+            >
               {todayTasks.map((t) => (
                 <TaskItem
                   key={t._id}
@@ -393,7 +399,13 @@ const Tasks = () => {
             </div>
           </div>
 
-          <div className="list-group list-group-flush shadow-sm rounded-4 overflow-hidden border">
+          <div
+            className="d-grid gap-3"
+            style={{
+              gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+              alignItems: "start",
+            }}
+          >
             {tasks
               .filter((t) => {
                 if (filter.category !== "all" && t.category !== filter.category)
@@ -424,14 +436,14 @@ const Tasks = () => {
               .map((t) => (
                 <div
                   key={t._id}
-                  style={
-                    t.isCompleted
+                  style={{
+                    width: "100%",
+                    ...(t.isCompleted
                       ? { opacity: 0.6, filter: "grayscale(0.5)" }
-                      : {}
-                  }
+                      : {}),
+                  }}
                 >
                   <TaskItem
-                    key={t._id}
                     task={t}
                     user={user}
                     setTasks={setTasks}
