@@ -8,18 +8,19 @@ const HeatMapGrid = ({ data, joinDate, daysToView = 28 }) => {
 
   const getLevelColor = (level, isBeforeJoining, isOverloaded) => {
     if (isBeforeJoining) return "#f1f3f5";
-    if (isOverloaded) return "#1a1a1a";
+    if (isOverloaded) return "#FF007F";
+
     switch (level) {
       case 4:
-        return "#9b5de5";
+        return "#DB2777";
       case 3:
-        return "#bc98f3";
+        return "#F472B6";
       case 2:
-        return "#f15bb5";
+        return "#FBCFE8";
       case 1:
-        return "#fee9f5";
+        return "#FCE7F3";
       default:
-        return "#f8f9fa";
+        return "#F5F5F7";
     }
   };
 
@@ -81,8 +82,6 @@ const HeatMapGrid = ({ data, joinDate, daysToView = 28 }) => {
             (dayInfo.energyUsed > 0 &&
               dayInfo.energyUsed >= dayInfo.dailyLimit);
 
-          const displayLevel = isOverloaded ? 4 : dayInfo.level;
-
           return (
             <div
               key={day.key}
@@ -97,30 +96,32 @@ const HeatMapGrid = ({ data, joinDate, daysToView = 28 }) => {
               style={{
                 aspectRatio: "1 / 1",
                 backgroundColor: getLevelColor(
-                  displayLevel,
+                  dayInfo.level,
                   isBeforeJoining,
                   isOverloaded,
                 ),
                 borderRadius: "8px",
-                border: isJoinDate ? "3px solid #4cc9f0" : "1px solid #eee",
+                border: isJoinDate
+                  ? "3px solid #1D4ED8"
+                  : isOverloaded
+                    ? "2px solid #FF0055"
+                    : "1px solid #E5E7EB",
                 boxSizing: "border-box",
                 cursor: isBeforeJoining ? "default" : "pointer",
                 opacity: isBeforeJoining ? 0.4 : 1,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "1rem",
+                fontSize: "1.1rem",
                 transition: "transform 0.15s ease",
-                color: "transparent",
               }}
-              className="heatmap-square"
+              className="heatmap-square shadow-sm"
             >
               {isOverloaded && !isBeforeJoining ? (
                 <span
                   style={{
                     pointerEvents: "none",
                     lineHeight: 1,
-                    color: "#000",
                   }}
                 >
                   🔥
@@ -147,7 +148,7 @@ const HeatMapGrid = ({ data, joinDate, daysToView = 28 }) => {
             )}
           </p>
         ) : (
-          <p className="text-muted m-0">Consistency is key ✨</p>
+          <p className="text-muted m-0">Consistency is key!</p>
         )}
       </div>
 
