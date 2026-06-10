@@ -187,11 +187,34 @@ const Tasks = () => {
     }
   }, [tasks, googleDrain, showEnergyBar, silencedLevel, dailyLimit]);
 
-  const handleCleanComplete = async (task) => {
+  // const handleCleanComplete = async (task) => {
+  //   try {
+  //     const res = await axios.put(
+  //       `${baseURL}/tasks/${task._id}`,
+  //       { isCompleted: true, completedAt: new Date().toISOString() },
+  //       { headers: { Authorization: `Bearer ${token}` } },
+  //     );
+
+  //     setTasks((prev) => prev.map((t) => (t._id === task._id ? res.data : t)));
+  //   } catch (err) {
+  //     console.error("Clean complete failed", err);
+  //   }
+  // };
+
+  const handleCleanComplete = async (task, dateTarget) => {
     try {
+      // If "today", we set completedAt to now. If "original", we match the task's original due date timestamp.
+      const completedTimestamp =
+        dateTarget === "today"
+          ? new Date().toISOString()
+          : new Date(task.dueDate).toISOString();
+
       const res = await axios.put(
         `${baseURL}/tasks/${task._id}`,
-        { isCompleted: true, completedAt: new Date().toISOString() },
+        {
+          isCompleted: true,
+          completedAt: completedTimestamp,
+        },
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
