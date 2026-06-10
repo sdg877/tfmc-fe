@@ -17,7 +17,7 @@ const Auth = ({ setUser }) => {
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
         setUser(response.data);
-        navigate("/profile");
+        navigate("/tasks");
       }
     } catch (err) {
       console.error("Auth Error:", err.response?.data || err.message);
