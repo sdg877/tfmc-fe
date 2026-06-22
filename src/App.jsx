@@ -18,6 +18,8 @@ import Tasks from "./pages/Tasks";
 import Calendar from "./pages/Calendar";
 import Progress from "./pages/Progress";
 import Settings from "./pages/Settings";
+import Contact from "./pages/Contact";
+import About from "./pages/About";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -44,7 +46,7 @@ function App() {
         } catch (err) {
           console.error("Session fetch failed", err);
           localStorage.removeItem("token");
-          setUser(null); // Ensure user state is cleared
+          setUser(null);
         }
       }
     };
@@ -59,6 +61,8 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/about" element={<About />} />
             <Route path="/login" element={<Auth setUser={setUser} />} />
             <Route path="/signup" element={<Auth setUser={setUser} />} />
 
