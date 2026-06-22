@@ -43,6 +43,10 @@ const Tasks = () => {
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [overdueQueue, setOverdueQueue] = useState([]);
 
+  const [energyViewMode, setEnergyViewMode] = useState(() => {
+    return localStorage.getItem("energyViewMode") || "battery";
+  });
+
   const [silencedLevel, setSilencedLevel] = useState(() => {
     return parseInt(localStorage.getItem("silencedEnergyLevel")) || 0;
   });
@@ -187,23 +191,16 @@ const Tasks = () => {
     }
   }, [tasks, googleDrain, showEnergyBar, silencedLevel, dailyLimit]);
 
-  // const handleCleanComplete = async (task) => {
-  //   try {
-  //     const res = await axios.put(
-  //       `${baseURL}/tasks/${task._id}`,
-  //       { isCompleted: true, completedAt: new Date().toISOString() },
-  //       { headers: { Authorization: `Bearer ${token}` } },
-  //     );
-
-  //     setTasks((prev) => prev.map((t) => (t._id === task._id ? res.data : t)));
-  //   } catch (err) {
-  //     console.error("Clean complete failed", err);
-  //   }
-  // };
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setEnergyViewMode(localStorage.getItem("energyViewMode") || "battery");
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   const handleCleanComplete = async (task, dateTarget) => {
     try {
-      // If "today", we set completedAt to now. If "original", we match the task's original due date timestamp.
       const completedTimestamp =
         dateTarget === "today"
           ? new Date().toISOString()
@@ -219,6 +216,7 @@ const Tasks = () => {
       );
 
       setTasks((prev) => prev.map((t) => (t._id === task._id ? res.data : t)));
+      setOverdueQueue((prev) => prev.filter((o) => o._id !== task._id));
     } catch (err) {
       console.error("Clean complete failed", err);
     }
@@ -234,12 +232,15 @@ const Tasks = () => {
       );
 
       setTasks((prev) => prev.map((t) => (t._id === task._id ? res.data : t)));
+      setOverdueQueue((prev) => prev.filter((o) => o._id !== task._id));
     } catch (err) {
       console.error("Clean update date failed", err);
     }
   };
 
-  const handleCleanSkip = (task) => {};
+  const handleCleanSkip = (task) => {
+    setOverdueQueue((prev) => prev.filter((o) => o._id !== task._id));
+  };
 
   const handleTaskAdded = (newTask) => {
     setTasks([newTask, ...tasks]);
@@ -312,8 +313,8 @@ const Tasks = () => {
           <EnergyProgress
             tasks={tasks}
             dailyLimit={dailyLimit}
-            googleDrain={googleDrain}
             user={user}
+            viewMode={energyViewMode}
           />
         </div>
       )}
