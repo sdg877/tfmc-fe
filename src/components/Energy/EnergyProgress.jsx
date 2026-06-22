@@ -1,6 +1,6 @@
 import React from "react";
 
-const EnergyProgress = ({ tasks, dailyLimit, user }) => {
+const EnergyProgress = ({ tasks, dailyLimit, user, viewMode = "battery" }) => {
   const currentLimit = Number(dailyLimit) || 100;
 
   const getCategoryWeight = (task) => {
@@ -23,40 +23,34 @@ const EnergyProgress = ({ tasks, dailyLimit, user }) => {
   const calculateEnergyBreakdown = (list) => {
     if (!list || list.length === 0) return { completed: 0, planned: 0 };
 
-    // Get midnight today as a timestamp for clean date comparisons
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-
-    const todayString = todayStart.toLocaleDateString("en-GB");
+    const todayString = todayStart.toLocaleDateString("sv-SE");
 
     return list.reduce(
       (acc, t) => {
+        const taskDate = t.completedAt || t.dueDate;
+        const localTaskDate = taskDate
+          ? new Date(taskDate).toLocaleDateString("sv-SE")
+          : null;
+
         const isPlannedToday = t.isPlannedForToday === true;
+        const matchesToday = localTaskDate === todayString;
 
-        // 1. Check if the task is strictly due today
-        const isDueToday =
-          t.dueDate &&
-          new Date(t.dueDate).toLocaleDateString("en-GB") === todayString;
-
-        // 2. Check if the task is overdue (due date is in the past)
         const isOverdue =
+          !t.isCompleted &&
           t.dueDate &&
           new Date(t.dueDate).setHours(0, 0, 0, 0) < todayStart.getTime();
 
-        const completedToday =
-          t.isCompleted &&
-          t.completedAt &&
-          new Date(t.completedAt).toLocaleDateString("en-GB") === todayString;
+        const completedToday = t.isCompleted && matchesToday;
+        const plannedForToday =
+          !t.isCompleted && (isPlannedToday || matchesToday || isOverdue);
 
         const taskWeight = getCategoryWeight(t);
 
         if (completedToday) {
           acc.completed += taskWeight;
-        } else if (
-          !t.isCompleted &&
-          (isPlannedToday || isDueToday || isOverdue)
-        ) {
-          // Included overdue tasks here 👆
+        } else if (plannedForToday) {
           acc.planned += taskWeight;
         }
         return acc;
@@ -68,18 +62,30 @@ const EnergyProgress = ({ tasks, dailyLimit, user }) => {
   const { completed, planned } = calculateEnergyBreakdown(tasks);
   const totalUnitsUsed = completed + planned;
 
-  const usagePercentage =
-    currentLimit > 0 ? Math.round((totalUnitsUsed / currentLimit) * 100) : 0;
+  const batteryPercentage =
+    currentLimit > 0
+      ? Math.max(0, 100 - Math.round((totalUnitsUsed / currentLimit) * 100))
+      : 100;
+  const barPercentage =
+    currentLimit > 0
+      ? Math.min(100, Math.round((completed / currentLimit) * 100))
+      : 0;
 
+  const displayPercentage =
+    viewMode === "battery" ? batteryPercentage : barPercentage;
   const completedWidth =
     currentLimit > 0 ? (completed / currentLimit) * 100 : 0;
-  const plannedWidth = currentLimit > 0 ? (planned / currentLimit) * 100 : 0;
-  const lockedWidth = 100 - (currentLimit > 100 ? 100 : currentLimit);
-
   const isOverload = totalUnitsUsed > currentLimit;
-  const getBatteryColor = () => {
+
+  const getProgressColor = () => {
     if (isOverload) return "#f87171";
-    if (totalUnitsUsed > currentLimit * 0.8) return "#fb923c";
+
+    if (viewMode === "battery") {
+      if (batteryPercentage <= 20) return "#fb923c";
+      return "#34d399";
+    }
+
+    if (barPercentage >= 80) return "#fb923c";
     return "#34d399";
   };
 
@@ -90,9 +96,9 @@ const EnergyProgress = ({ tasks, dailyLimit, user }) => {
     >
       <div className="mb-2">
         <h6 className="fw-bold mb-0 text-dark" style={{ fontSize: "0.85rem" }}>
-          Daily Energy Battery
+          {viewMode === "battery" ? "Energy Battery" : "Progress Bar"}
         </h6>
-        <div className="d-flex align-items-center gap-2 mt-1">
+        <div className="mt-1">
           <span
             className="fw-bold"
             style={{
@@ -100,10 +106,8 @@ const EnergyProgress = ({ tasks, dailyLimit, user }) => {
               color: isOverload ? "#ef4444" : "#1e293b",
             }}
           >
-            {usagePercentage}% Used
-          </span>
-          <span className="text-muted small">
-            ({totalUnitsUsed} / {currentLimit} units)
+            {displayPercentage}%{" "}
+            {viewMode === "battery" ? "Remaining" : "Complete"}
           </span>
         </div>
       </div>
@@ -127,65 +131,58 @@ const EnergyProgress = ({ tasks, dailyLimit, user }) => {
               backgroundColor: "#f1f5f9",
             }}
           >
-            <div
-              style={{
-                width: `${Math.min(completedWidth, 100)}%`,
-                backgroundColor: getBatteryColor(),
-                transition: "width 0.4s ease",
-                height: "100%",
-              }}
-            />
-            <div
-              style={{
-                width: `${Math.min(plannedWidth, 100 - completedWidth)}%`,
-                backgroundColor: getBatteryColor(),
-                opacity: 0.45,
-                transition: "width 0.4s ease",
-                height: "100%",
-              }}
-            />
-            {lockedWidth > 0 && (
+            {viewMode === "battery" ? (
               <div
                 style={{
-                  position: "absolute",
-                  right: 0,
-                  top: 0,
-                  width: `${lockedWidth}%`,
-                  backgroundColor: "#94a3b8",
-                  backgroundImage:
-                    "repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.15) 4px, rgba(255,255,255,0.15) 8px)",
+                  width: `${Math.max(0, 100 - ((completed + planned) / currentLimit) * 100)}%`,
+                  backgroundColor: getProgressColor(),
+                  transition: "width 0.4s ease",
                   height: "100%",
-                  borderLeft: "1.5px solid #64748b",
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: `${Math.min(completedWidth, 100)}%`,
+                  backgroundColor: getProgressColor(),
+                  transition: "width 0.4s ease",
+                  height: "100%",
                 }}
               />
             )}
           </div>
         </div>
-        <div
-          style={{
-            width: "4px",
-            height: "10px",
-            backgroundColor: "#cbd5e1",
-            borderRadius: "0 2.5px 2.5px 0",
-            marginLeft: "-1px",
-          }}
-        />
+        {viewMode === "battery" && (
+          <div
+            style={{
+              width: "4px",
+              height: "10px",
+              backgroundColor: "#cbd5e1",
+              borderRadius: "0 2.5px 2.5px 0",
+              marginLeft: "-1px",
+            }}
+          />
+        )}
       </div>
 
-      <div className="d-flex gap-3 mt-1 border-top pt-2">
+      <div className="d-flex flex-wrap gap-3 mt-1 border-top pt-2">
         <small
           className="fw-bold text-uppercase text-muted"
           style={{ fontSize: "0.58rem" }}
         >
-          <span style={{ color: getBatteryColor() }}>●</span> Completed:{" "}
-          {completed}
+          ● Complete: {completed}
         </small>
         <small
           className="fw-bold text-uppercase text-muted"
           style={{ fontSize: "0.58rem" }}
         >
-          <span style={{ opacity: 0.5, color: getBatteryColor() }}>●</span>{" "}
-          Planned: {planned}
+          ● Planned/Remaining: {planned}
+        </small>
+        <small
+          className="fw-bold text-uppercase text-muted"
+          style={{ fontSize: "0.58rem" }}
+        >
+          ● Max Capacity: {currentLimit}
         </small>
       </div>
 
@@ -194,7 +191,7 @@ const EnergyProgress = ({ tasks, dailyLimit, user }) => {
           className="mt-2 text-danger fw-bold"
           style={{ fontSize: "0.68rem" }}
         >
-          ⚠️ OVERLOAD: Tasks exceed lowered energy capacity.
+          Overload: Scheduled tasks exceed your capacity limit.
         </div>
       )}
     </div>
