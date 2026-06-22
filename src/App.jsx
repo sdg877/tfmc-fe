@@ -11,6 +11,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 
 import Navbar from "./components/Layout/Navbar";
+import Footer from "./components/Layout/Footer";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -56,59 +57,62 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
       <Router>
-        <Navbar user={user} setUser={setUser} />
-        <main>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/login" element={<Auth setUser={setUser} />} />
-            <Route path="/signup" element={<Auth setUser={setUser} />} />
+        <div className="d-flex flex-column min-vh-100">
+          <Navbar user={user} setUser={setUser} />
+          <main className="flex-grow-1">
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Home />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/login" element={<Auth setUser={setUser} />} />
+              <Route path="/signup" element={<Auth setUser={setUser} />} />
 
-            {/* Protected Routes */}
-            <Route
-              path="/tasks"
-              element={
-                <ProtectedRoute>
-                  <Tasks user={user} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/calendar"
-              element={
-                <ProtectedRoute>
-                  <Calendar user={user} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/progress"
-              element={
-                <ProtectedRoute>
-                  <Progress user={user} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile user={user} setUser={setUser} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <Settings user={user} setUser={setUser} />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </main>
+              {/* Protected Routes */}
+              <Route
+                path="/tasks"
+                element={
+                  <ProtectedRoute>
+                    <Tasks user={user} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/calendar"
+                element={
+                  <ProtectedRoute>
+                    <Calendar user={user} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/progress"
+                element={
+                  <ProtectedRoute>
+                    <Progress user={user} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile user={user} setUser={setUser} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <Settings user={user} setUser={setUser} />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
       </Router>
     </GoogleOAuthProvider>
   );
