@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import axios from "axios";
 import CustomModal from "../layout/CustomModal";
 
@@ -41,7 +42,7 @@ const DeleteTask = ({ taskId, googleEventId, setTasks }) => {
     <>
       <button
         onClick={triggerModal}
-        className="btn btn-sm text-danger border-0 p-0 px-2"
+        className="btn btn-sm text-danger border-0 p-0 px-2 shadow-none"
       >
         <svg
           width="18"
@@ -56,16 +57,20 @@ const DeleteTask = ({ taskId, googleEventId, setTasks }) => {
         </svg>
       </button>
 
-      <div onClick={(e) => e.stopPropagation()}>
-        <CustomModal
-          show={showModal}
-          title="DELETE TASK"
-          message="Are you sure? This will permanently remove the task and any linked Google Calendar event."
-          type="danger"
-          onClose={() => setShowModal(false)}
-          onConfirm={confirmDelete}
-        />
-      </div>
+      {showModal &&
+        createPortal(
+          <div onClick={(e) => e.stopPropagation()}>
+            <CustomModal
+              show={showModal}
+              title="DELETE TASK"
+              message="Are you sure? This will permanently remove the task and any linked Google Calendar event."
+              type="danger"
+              onClose={() => setShowModal(false)}
+              onConfirm={confirmDelete}
+            />
+          </div>,
+          document.body,
+        )}
     </>
   );
 };
