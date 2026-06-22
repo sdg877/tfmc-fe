@@ -15,6 +15,10 @@ const Settings = ({ user, setUser }) => {
     return saved !== null ? JSON.parse(saved) : true;
   });
 
+  const [energyViewMode, setEnergyViewMode] = useState(() => {
+    return localStorage.getItem("energyViewMode") || "battery";
+  });
+
   const baseURL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
 
@@ -99,6 +103,12 @@ const Settings = ({ user, setUser }) => {
     }
   };
 
+  const handleViewModeChange = (e) => {
+    const val = e.target.value;
+    setEnergyViewMode(val);
+    localStorage.setItem("energyViewMode", val);
+  };
+
   return (
     <div className="container py-4" style={{ maxWidth: "1000px" }}>
       <header className="mb-4">
@@ -142,6 +152,31 @@ const Settings = ({ user, setUser }) => {
                 showHeatMap={showHeatMap}
                 onUpdate={handleHeatMapToggleUpdate}
               />
+
+              {showEnergyFeatures && (
+                <>
+                  <hr className="my-3 opacity-10" />
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                      <p className="fw-bold mb-0 small text-dark">
+                        Energy Tracker Layout
+                      </p>
+                      <p className="small text-muted mb-0">
+                        Choose how your tracking bar computes task values.
+                      </p>
+                    </div>
+                    <select
+                      className="form-select form-select-sm border bg-light fw-bold rounded-pill px-3 shadow-none style-select"
+                      style={{ maxWidth: "200px", cursor: "pointer" }}
+                      value={energyViewMode}
+                      onChange={handleViewModeChange}
+                    >
+                      <option value="battery">Drain Battery</option>
+                      <option value="bar">Fill Progress Bar</option>
+                    </select>
+                  </div>
+                </>
+              )}
             </div>
 
             {showEnergyFeatures ? (
@@ -174,7 +209,6 @@ const Settings = ({ user, setUser }) => {
           </div>
         )}
 
-        {/* --- INTEGRATIONS & ROUTINES TAB --- */}
         {activeTab === "integrations" && (
           <div className="fade-in">
             <h6 className="text-uppercase fw-bold text-muted small mb-3 px-1">
@@ -221,7 +255,6 @@ const Settings = ({ user, setUser }) => {
               </div>
             </div>
 
-            {/* Automation Section */}
             <h6 className="text-uppercase fw-bold text-muted small mb-3 px-1">
               Task Automation
             </h6>
