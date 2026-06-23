@@ -5,7 +5,10 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-light border-top py-2.5 mt-auto">
+    <footer
+      className="bg-light border-top py-2.5 mt-auto"
+      style={{ backgroundColor: "#E9D5FF" }}
+    >
       <div className="container text-center">
         <div className="d-flex justify-content-center gap-3 mb-1">
           <Link
