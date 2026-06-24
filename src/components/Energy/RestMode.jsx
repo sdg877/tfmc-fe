@@ -39,7 +39,6 @@ const RestMode = () => {
 
     setLoading(true);
 
-    // Generate array of date strings between start and end inclusive
     const newDates = [];
     let current = new Date(start);
 
@@ -75,9 +74,9 @@ const RestMode = () => {
     }
   };
 
-  const handleRemoveDate = async (dateToRemove) => {
+  const handleRemoveRange = async (dateArray) => {
     setLoading(true);
-    const updatedHolidays = holidays.filter((d) => d !== dateToRemove);
+    const updatedHolidays = holidays.filter((d) => !dateArray.includes(d));
 
     try {
       await axios.put(
@@ -87,11 +86,69 @@ const RestMode = () => {
       );
       setHolidays(updatedHolidays);
     } catch (err) {
-      console.error("Failed to remove holiday:", err);
-      alert("Could not remove holiday date.");
+      console.error("Failed to remove holiday segment:", err);
+      alert("Could not remove holiday.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const getSequentialGroups = () => {
+    if (holidays.length === 0) return {};
+
+    const groups = {};
+    let currentRange = [holidays[0]];
+
+    for (let i = 1; i < holidays.length; i++) {
+      const prevDate = new Date(holidays[i - 1]);
+      const currDate = new Date(holidays[i]);
+
+      const diffTime = Math.abs(currDate - prevDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
+        currentRange.push(holidays[i]);
+      } else {
+        const firstDateObj = new Date(currentRange[0]);
+        const monthYear = firstDateObj.toLocaleDateString("en-GB", {
+          month: "long",
+          year: "numeric",
+        });
+        if (!groups[monthYear]) groups[monthYear] = [];
+        groups[monthYear].push(currentRange);
+
+        currentRange = [holidays[i]];
+      }
+    }
+
+    if (currentRange.length > 0) {
+      const firstDateObj = new Date(currentRange[0]);
+      const monthYear = firstDateObj.toLocaleDateString("en-GB", {
+        month: "long",
+        year: "numeric",
+      });
+      if (!groups[monthYear]) groups[monthYear] = [];
+      groups[monthYear].push(currentRange);
+    }
+
+    return groups;
+  };
+
+  const formattedGroups = getSequentialGroups();
+
+  const formatDateLabel = (dateArray) => {
+    const formatDate = (str) => {
+      const d = new Date(str);
+      return d.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+      });
+    };
+
+    if (dateArray.length === 1) {
+      return formatDate(dateArray[0]);
+    }
+    return `${formatDate(dateArray[0])} - ${formatDate(dateArray[dateArray.length - 1])}`;
   };
 
   return (
@@ -148,7 +205,8 @@ const RestMode = () => {
                   className="form-control shadow-none border"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  disabled={loading}
+                  disabled={loading || !startDate}
+                  min={startDate}
                 />
               </div>
               <button
@@ -157,43 +215,56 @@ const RestMode = () => {
                 disabled={loading || !startDate || !endDate}
                 style={{ height: "38px" }}
               >
-                Add Range
+                Add
               </button>
             </div>
           </form>
 
           <div>
             <h6
-              className="fw-bold text-uppercase text-muted extra-small mb-2"
+              className="fw-bold text-uppercase text-muted extra-small mb-3"
               style={{ fontSize: "0.75rem" }}
             >
               Scheduled Breaks
             </h6>
+
             {holidays.length === 0 ? (
               <p className="text-muted small mb-0">
                 No rest days scheduled yet.
               </p>
             ) : (
-              <div className="d-flex flex-wrap gap-2">
-                {holidays.map((date) => (
-                  <span
-                    key={date}
-                    className="badge bg-light text-dark border d-flex align-items-center gap-2 px-2.5 py-2 rounded-3 fw-normal"
-                    style={{ fontSize: "0.85rem" }}
-                  >
-                    {new Date(date).toLocaleDateString("en-GB")}
-                    <button
-                      type="button"
-                      className="btn-close shadow-none"
-                      style={{
-                        width: "0.5em",
-                        height: "0.5em",
-                        fontSize: "0.65rem",
-                      }}
-                      onClick={() => handleRemoveDate(date)}
-                      disabled={loading}
-                    />
-                  </span>
+              <div className="d-flex flex-column gap-3">
+                {Object.keys(formattedGroups).map((monthYear) => (
+                  <div key={monthYear} className="border-bottom pb-3">
+                    <span
+                      className="fw-bold text-secondary d-block mb-2"
+                      style={{ fontSize: "0.8rem" }}
+                    >
+                      {monthYear}
+                    </span>
+                    <div className="d-flex flex-wrap gap-2">
+                      {formattedGroups[monthYear].map((dateArray, index) => (
+                        <span
+                          key={index}
+                          className="badge bg-light text-dark border d-flex align-items-center gap-2 px-2.5 py-2 rounded-3 fw-normal"
+                          style={{ fontSize: "0.85rem" }}
+                        >
+                          {formatDateLabel(dateArray)}
+                          <button
+                            type="button"
+                            className="btn-close shadow-none"
+                            style={{
+                              width: "0.5em",
+                              height: "0.5em",
+                              fontSize: "0.65rem",
+                            }}
+                            onClick={() => handleRemoveRange(dateArray)}
+                            disabled={loading}
+                          />
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
