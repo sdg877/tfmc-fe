@@ -289,7 +289,7 @@ const Home = () => {
         ) : (
           <div className="py-5 text-center text-muted border border-dashed rounded-4 d-flex flex-column align-items-center justify-content-center gap-2">
             <span style={{ fontSize: "2rem" }}>☕</span>
-            <span className="fw-bold">Clear skies today!</span>
+            <span className="fw-bold">Tasks Complete for the Day!!</span>
             <Link
               to="/tasks"
               className="btn btn-dark btn-sm rounded-pill px-4 fw-bold mt-2"
