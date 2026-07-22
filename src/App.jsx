@@ -22,6 +22,7 @@ import Settings from "./pages/Settings";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Help from "./pages/Help";
+import Notifications from "./components/Layout/Notifications";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -91,6 +92,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Help user={user} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute>
+                    <Notifications user={user} />
                   </ProtectedRoute>
                 }
               />
