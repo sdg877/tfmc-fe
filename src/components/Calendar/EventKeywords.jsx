@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -28,11 +26,11 @@ const EventKeywords = ({ user, onUserUpdate }) => {
     try {
       // Sending payload directly to your user configuration update endpoint
       const res = await axios.put(
-        `${baseURL}/users/profile`, 
+        `${baseURL}/users/profile`,
         { calendarMapping: updatedMappings },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-      
+
       // Notify parent component to update globally stored user context state
       if (onUserUpdate) {
         onUserUpdate(res.data);
@@ -52,15 +50,18 @@ const EventKeywords = ({ user, onUserUpdate }) => {
     if (!newKeyword.trim()) return;
 
     const cleanerKeyword = newKeyword.trim().toLowerCase();
-    
+
     // Prevent duplicate keywords
-    if (mappings.some(m => m.keyword.toLowerCase() === cleanerKeyword)) {
+    if (mappings.some((m) => m.keyword.toLowerCase() === cleanerKeyword)) {
       setError("This keyword rule already exists.");
       return;
     }
 
-    const updated = [...mappings, { keyword: cleanerKeyword, points: Number(newPoints) }];
-    
+    const updated = [
+      ...mappings,
+      { keyword: cleanerKeyword, points: Number(newPoints) },
+    ];
+
     // Optimistic UI updates, followed by network sync
     setMappings(updated);
     setNewKeyword("");
@@ -90,12 +91,23 @@ const EventKeywords = ({ user, onUserUpdate }) => {
       <div className="d-flex align-items-center justify-content-between mb-3">
         <div>
           <h4 className="fw-bold mb-1">📅 Google Calendar Smart Drain</h4>
-          <p className="text-muted small mb-0">Assign automatic energy points using event text keywords</p>
+          <p className="text-muted small mb-0">
+            Assign automatic energy points using event text keywords
+          </p>
         </div>
-        {loading && <span className="spinner-border spinner-border-sm text-secondary" role="status" />}
+        {loading && (
+          <span
+            className="spinner-border spinner-border-sm text-secondary"
+            role="status"
+          />
+        )}
       </div>
 
-      {error && <div className="alert alert-danger py-2 small border-0 rounded-3 mb-3">{error}</div>}
+      {error && (
+        <div className="alert alert-danger py-2 small border-0 rounded-3 mb-3">
+          {error}
+        </div>
+      )}
 
       {/* Input Form Setup */}
       <form onSubmit={handleAddKeyword} className="row g-2 mb-4">
@@ -125,7 +137,11 @@ const EventKeywords = ({ user, onUserUpdate }) => {
           </select>
         </div>
         <div className="col-2">
-          <button type="submit" className="btn btn-dark btn-sm w-100 fw-bold rounded-3" disabled={loading}>
+          <button
+            type="submit"
+            className="btn btn-dark btn-sm w-100 fw-bold rounded-3"
+            disabled={loading}
+          >
             Add
           </button>
         </div>
@@ -139,8 +155,8 @@ const EventKeywords = ({ user, onUserUpdate }) => {
           </p>
         ) : (
           mappings.map((item, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="d-flex align-items-center justify-content-between bg-light p-2 rounded-3"
             >
               <div className="d-flex align-items-center gap-2 flex-grow-1">
@@ -166,7 +182,7 @@ const EventKeywords = ({ user, onUserUpdate }) => {
                   <option value="40">40</option>
                   <option value="50">50</option>
                 </select>
-                
+
                 <button
                   type="button"
                   className="btn btn-link link-danger p-1 text-decoration-none"
@@ -174,7 +190,14 @@ const EventKeywords = ({ user, onUserUpdate }) => {
                   disabled={loading}
                   aria-label="Remove keyword mapping rule"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <polyline points="3 6 5 6 21 6" />
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                   </svg>
