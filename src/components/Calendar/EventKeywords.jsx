@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const EventKeywords = ({ user, onUserUpdate }) => {
-  // Use mappings from user context if available, otherwise default to empty array
   const [mappings, setMappings] = useState([]);
   const [newKeyword, setNewKeyword] = useState("");
   const [newPoints, setNewPoints] = useState(10);
@@ -12,26 +11,22 @@ const EventKeywords = ({ user, onUserUpdate }) => {
   const baseURL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
 
-  // Sync state with the logged-in user profile data
   useEffect(() => {
     if (user?.calendarMapping) {
       setMappings(user.calendarMapping);
     }
   }, [user]);
 
-  // Helper function to send updated array to backend API
   const saveMappingsToDatabase = async (updatedMappings) => {
     setLoading(true);
     setError("");
     try {
-      // Sending payload directly to your user configuration update endpoint
       const res = await axios.put(
         `${baseURL}/users/profile`,
         { calendarMapping: updatedMappings },
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      // Notify parent component to update globally stored user context state
       if (onUserUpdate) {
         onUserUpdate(res.data);
       } else {
@@ -51,7 +46,6 @@ const EventKeywords = ({ user, onUserUpdate }) => {
 
     const cleanerKeyword = newKeyword.trim().toLowerCase();
 
-    // Prevent duplicate keywords
     if (mappings.some((m) => m.keyword.toLowerCase() === cleanerKeyword)) {
       setError("This keyword rule already exists.");
       return;
@@ -62,7 +56,6 @@ const EventKeywords = ({ user, onUserUpdate }) => {
       { keyword: cleanerKeyword, points: Number(newPoints) },
     ];
 
-    // Optimistic UI updates, followed by network sync
     setMappings(updated);
     setNewKeyword("");
     setNewPoints(10);
@@ -109,7 +102,6 @@ const EventKeywords = ({ user, onUserUpdate }) => {
         </div>
       )}
 
-      {/* Input Form Setup */}
       <form onSubmit={handleAddKeyword} className="row g-2 mb-4">
         <div className="col-7">
           <input
@@ -147,7 +139,6 @@ const EventKeywords = ({ user, onUserUpdate }) => {
         </div>
       </form>
 
-      {/* Rules Active Listing */}
       <div className="d-flex flex-column gap-2">
         {mappings.length === 0 ? (
           <p className="text-muted small text-center my-3 italic">
@@ -166,7 +157,6 @@ const EventKeywords = ({ user, onUserUpdate }) => {
                 <span className="text-muted small">costs</span>
               </div>
 
-              {/* Live select mapping update loop */}
               <div className="d-flex align-items-center gap-2">
                 <select
                   className="form-select form-select-sm bg-white border border-light shadow-none py-0 px-2 fw-bold text-dark text-center"
