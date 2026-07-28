@@ -10,4 +10,9 @@ export default defineConfig({
       "Cross-Origin-Embedder-Policy": "unsafe-none",
     },
   },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: "./src/setupTests.js",
+  },
 });
