@@ -6,25 +6,22 @@ const AppLoader = ({ message = "Syncing your fast mind..." }) => {
       className="d-flex flex-column justify-content-center align-items-center"
       style={{ height: "70vh" }}
     >
-      {/* Container for the pulsing icon */}
       <div className="loader-icon-container mb-4">
         <svg
           width="80"
           height="80"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#9b5de5" // Your purple brand color
+          stroke="#9b5de5"
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
           className="main-pulse"
         >
-          {/* An Hourglass-style icon */}
           <path d="M5 2h14M5 22h14M6 2v6.5c0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5V2M18 22v-6.5c0-1.93-1.57-3.5-3.5-3.5s-3.5 1.57-3.5 3.5V22" />
         </svg>
       </div>
 
-      {/* Pulsing Text */}
       <h5
         className="fw-bold text-dark text-uppercase tracking-widest animate-flicker"
         style={{ letterSpacing: "2px", fontSize: "0.9rem" }}
