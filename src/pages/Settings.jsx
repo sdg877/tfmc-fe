@@ -3,7 +3,7 @@ import axios from "axios";
 import EnergySlider from "../components/Energy/EnergySlider";
 import EnergyToggle from "../components/Energy/EnergyToggle";
 import HeatmapToggle from "../components/HeatMap/HeatmapToggle";
-import GoogleConnect from "../components/Google/GoogleConnect";
+import GoogleConnect from "../components/Calendar/GoogleConnect";
 import CategoryManager from "../components/Energy/CategoryManager";
 import RecurringTasks from "../components/Tasks/RecurringTasks";
 import RestMode from "../components/Energy/RestMode";
