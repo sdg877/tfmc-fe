@@ -286,6 +286,7 @@ const Profile = ({ user, setUser }) => {
           <HeatMapGrid
             data={heatmapData}
             joinDate={user.createdAt}
+            user={user}
             daysToView={28}
           />
         </div>
