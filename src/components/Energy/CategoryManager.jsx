@@ -130,6 +130,7 @@ const CategoryManager = ({ user, onUpdate }) => {
 
   return (
     <div className="card border-0 shadow-sm rounded-4 p-4 mb-3">
+      {/* Top Toggle Banner with Clear Description */}
       <div className="d-flex justify-content-between align-items-center p-3 rounded-3 bg-light border">
         <div className="form-check form-switch d-flex align-items-center mb-0">
           <input
@@ -139,17 +140,25 @@ const CategoryManager = ({ user, onUpdate }) => {
             checked={user.useManualWeights || false}
             onChange={handleToggleClick}
           />
-          <label
-            className="form-check-label small fw-bold text-dark cursor-pointer"
-            htmlFor="manualModeSwitch"
-          >
-            ENABLE MANUAL WEIGHTS
-          </label>
+          <div>
+            <label
+              className="form-check-label small fw-bold text-dark cursor-pointer d-block mb-0"
+              htmlFor="manualModeSwitch"
+            >
+              ENABLE CUSTOM CATEGORIES & WEIGHTS
+            </label>
+            <span
+              className="text-muted d-block"
+              style={{ fontSize: "0.75rem" }}
+            >
+              Customise task categories and assign individual energy values.
+            </span>
+          </div>
         </div>
 
         {user.useManualWeights && (
           <button
-            className="btn btn-link btn-sm text-danger fw-bold text-decoration-none p-0"
+            className="btn btn-link btn-sm text-danger fw-bold text-decoration-none p-0 ms-2"
             style={{ fontSize: "0.75rem" }}
             onClick={() => setShowResetModal(true)}
           >
