@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Logout from "../components/Layout/Logout";
@@ -26,7 +26,6 @@ const Profile = ({ user, setUser }) => {
     }
   }, [user]);
 
-  // Fetch tasks independently
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -40,6 +39,41 @@ const Profile = ({ user, setUser }) => {
     };
     if (token) fetchTasks();
   }, [baseURL, token]);
+
+  const stats = useMemo(() => {
+    if (!tasks.length)
+      return { weekCount: 0, monthCount: 0, totalCompleted: 0 };
+
+    const now = new Date();
+
+    const startOfWeek = new Date(now);
+    const dayOfWeek = now.getDay();
+    const distanceToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    startOfWeek.setDate(now.getDate() - distanceToMonday);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    let weekCount = 0;
+    let monthCount = 0;
+    let totalCompleted = 0;
+
+    tasks.forEach((task) => {
+      if (!task.isCompleted) return;
+
+      totalCompleted++;
+
+      const dateToUse = task.completedAt || task.updatedAt;
+      if (!dateToUse) return;
+
+      const taskDate = new Date(dateToUse);
+
+      if (taskDate >= startOfWeek) weekCount++;
+      if (taskDate >= startOfMonth) monthCount++;
+    });
+
+    return { weekCount, monthCount, totalCompleted };
+  }, [tasks]);
 
   useEffect(() => {
     if (!tasks.length || !user) return;
@@ -83,7 +117,7 @@ const Profile = ({ user, setUser }) => {
       let level = 0;
       if (totalEnergy > dailyLimit) level = 4;
       else if (totalEnergy > dailyLimit * 0.6) level = 3;
-      else if (totalEnergy > dailyLimit * 0.3) level = 2;
+      else if (totalEnergy > 0.3 * dailyLimit) level = 2;
       else if (totalEnergy > 0) level = 1;
 
       finalizedMap[date] = {
@@ -119,6 +153,13 @@ const Profile = ({ user, setUser }) => {
       alert(`Update failed: ${err.response?.data?.msg || "Check console"}`);
     }
   };
+
+  const formattedLastLogin = user.lastLogin
+    ? new Date(user.lastLogin).toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    : "First Session";
 
   return (
     <div className="container py-5" style={{ maxWidth: "800px" }}>
@@ -196,6 +237,50 @@ const Profile = ({ user, setUser }) => {
         )}
       </div>
 
+      {/* Activity Summary Table */}
+      <div className="bg-white border rounded-4 p-4 shadow-sm mb-4">
+        <h6 className="text-uppercase fw-bold text-muted small mb-3">
+          Activity Summary
+        </h6>
+        <div className="table-responsive">
+          <table className="table table-borderless align-middle mb-0">
+            <tbody>
+              <tr className="border-bottom">
+                <td className="ps-0 text-secondary py-3">Last Logged In</td>
+                <td className="pe-0 text-end fw-semibold text-dark py-3">
+                  {formattedLastLogin}
+                </td>
+              </tr>
+              <tr className="border-bottom">
+                <td className="ps-0 text-secondary py-3">
+                  Tasks Completed This Week
+                </td>
+                <td className="pe-0 text-end fw-bold text-dark py-3">
+                  {stats.weekCount}
+                </td>
+              </tr>
+              <tr className="border-bottom">
+                <td className="ps-0 text-secondary py-3">
+                  Tasks Completed This Month
+                </td>
+                <td className="pe-0 text-end fw-bold text-dark py-3">
+                  {stats.monthCount}
+                </td>
+              </tr>
+              <tr>
+                <td className="ps-0 text-secondary py-3">
+                  Total Tasks Completed
+                </td>
+                <td className="pe-0 text-end fw-bold text-dark py-3">
+                  {stats.totalCompleted}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Heatmap Section */}
       {showHeatMap && (
         <div className="bg-white border rounded-4 p-4 shadow-sm">
           <HeatMapGrid
