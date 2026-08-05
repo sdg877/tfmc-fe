@@ -4,6 +4,7 @@ import EnergySlider from "../components/Energy/EnergySlider";
 import EnergyToggle from "../components/Energy/EnergyToggle";
 import HeatmapToggle from "../components/HeatMap/HeatmapToggle";
 import GoogleConnect from "../components/Calendar/GoogleConnect";
+import IcalConnect from "../components/Calendar/IcalConnect";
 import CategoryManager from "../components/Energy/CategoryManager";
 import RecurringTasks from "../components/Tasks/RecurringTasks";
 import RestMode from "../components/Energy/RestMode";
@@ -92,7 +93,6 @@ const Settings = ({ user, setUser }) => {
   const handleHeatMapToggleUpdate = async (val) => {
     setShowHeatMap(val);
     localStorage.setItem("showHeatMap", JSON.stringify(val));
-
     try {
       await axios.put(
         `${baseURL}/users/profile/identity`,
@@ -217,7 +217,9 @@ const Settings = ({ user, setUser }) => {
             <h6 className="text-uppercase fw-bold text-muted small mb-3 px-1">
               Third-Party Sync
             </h6>
-            <div className="card border-0 shadow-sm rounded-4 p-4 mb-4">
+
+            {/* Google Calendar */}
+            <div className="card border-0 shadow-sm rounded-4 p-4 mb-3">
               <div className="d-flex justify-content-between align-items-center">
                 <div className="d-flex align-items-center gap-3">
                   <div className="bg-light p-3 rounded-circle">
@@ -253,6 +255,48 @@ const Settings = ({ user, setUser }) => {
                 </div>
                 <GoogleConnect
                   isConnected={user?.googleConnected}
+                  onSyncSuccess={(updatedUser) => setUser(updatedUser)}
+                />
+              </div>
+            </div>
+
+            {/* iCal */}
+            <div className="card border-0 shadow-sm rounded-4 p-4 mb-4">
+              <div className="d-flex justify-content-between align-items-start">
+                <div className="d-flex align-items-center gap-3">
+                  <div className="bg-light p-3 rounded-circle">
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <rect
+                        x="3"
+                        y="4"
+                        width="18"
+                        height="18"
+                        rx="2"
+                        ry="2"
+                      ></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="fw-bold mb-0">iCal Feed</p>
+                    <p className="small text-muted mb-0">
+                      {user?.icalConnected
+                        ? "Your iCal feed is connected and syncing."
+                        : "Connect any iCal feed from Apple Calendar, Outlook, or similar."}
+                    </p>
+                  </div>
+                </div>
+                <IcalConnect
+                  isConnected={user?.icalConnected}
                   onSyncSuccess={(updatedUser) => setUser(updatedUser)}
                 />
               </div>
