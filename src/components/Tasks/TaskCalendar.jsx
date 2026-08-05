@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import TaskDetailModal from "../Tasks/TaskDetailModal";
-import GoogleEventModal from "../Google/GoogleEventModal";
+import GoogleEventModal from "../Calendar/GoogleEventModal";
 import axios from "axios";
 
 const pastelPalette = [
