@@ -1,10 +1,52 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const HeatMapGrid = ({ data, joinDate, user, daysToView = 28 }) => {
   const [hoveredDay, setHoveredDay] = useState(null);
 
   const formatInternal = (d) => d.toLocaleDateString("sv-SE");
   const formatDisplay = (d) => d.toLocaleDateString("en-GB");
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const pureJoinDate = joinDate ? new Date(joinDate) : null;
+  const joinDateComparison = pureJoinDate
+    ? new Date(pureJoinDate.getTime()).setHours(0, 0, 0, 0)
+    : null;
+  const joinDateKey = pureJoinDate ? formatInternal(pureJoinDate) : null;
+
+  const lastLoginDate = user?.lastLogin ? new Date(user.lastLogin) : null;
+  if (lastLoginDate) lastLoginDate.setHours(0, 0, 0, 0);
+
+  const daysSinceJoining = joinDateComparison
+    ? Math.floor((today.getTime() - joinDateComparison) / (1000 * 60 * 60 * 24))
+    : 0;
+
+  const daysSinceLastLogin = lastLoginDate
+    ? Math.floor(
+        (today.getTime() - lastLoginDate.getTime()) / (1000 * 60 * 60 * 24),
+      )
+    : 0;
+
+  const isInactive = daysSinceJoining > 3 && daysSinceLastLogin > 3;
+
+  if (isInactive) {
+    return (
+      <div className="w-100 py-3 text-center">
+        <h5 className="fw-bold text-dark mb-2">Your Wins</h5>
+        <p className="text-muted small mb-3">
+          Grid hidden due to 3+ days of inactivity.
+        </p>
+        <Link
+          to="/settings"
+          className="btn btn-sm btn-outline-secondary rounded-pill px-3"
+        >
+          Manage in Settings
+        </Link>
+      </div>
+    );
+  }
 
   const getLevelColor = (level, isBeforeJoining, isOverloaded) => {
     if (isBeforeJoining) return "#f1f3f5";
@@ -23,15 +65,6 @@ const HeatMapGrid = ({ data, joinDate, user, daysToView = 28 }) => {
         return "#F5F5F7";
     }
   };
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const pureJoinDate = joinDate ? new Date(joinDate) : null;
-  const joinDateComparison = pureJoinDate
-    ? new Date(pureJoinDate.getTime()).setHours(0, 0, 0, 0)
-    : null;
-  const joinDateKey = pureJoinDate ? formatInternal(pureJoinDate) : null;
 
   const days = Array.from({ length: daysToView }, (_, i) => {
     const d = new Date();
@@ -76,10 +109,8 @@ const HeatMapGrid = ({ data, joinDate, user, daysToView = 28 }) => {
               ? Math.round((dayInfo.energyUsed / dayInfo.dailyLimit) * 100)
               : 0;
 
-          // Check if this specific day is an active rest day/holiday
           const isRestDay = user?.holidays?.includes(day.key);
 
-          // Overloaded if over 100% limit OR if it's a rest day and any energy was spent
           const isOverloaded =
             energyPercent >= 100 ||
             dayInfo.isOverloaded ||
