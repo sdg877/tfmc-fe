@@ -11,7 +11,6 @@ const CategoryManager = ({ user, onUpdate }) => {
 
   const token = localStorage.getItem("token");
   const baseURL = import.meta.env.VITE_API_URL;
-  de;
   const pastelPalette = [
     { bg: "#FFF0F5", text: "#C71585", border: "#FFB6C1" },
     { bg: "#E6F3FF", text: "#1D4ED8", border: "#B9E0FF" },
