@@ -6,33 +6,40 @@ const Footer = () => {
 
   return (
     <footer
-      className="bg-light border-top py-2.5 mt-auto"
-      style={{ backgroundColor: "#E9D5FF" }}
+      className="d-none d-md-block"
+      style={{
+        backgroundColor: "#faf9f7",
+        borderTop: "1px solid #f0f0f0",
+        padding: "1rem 0",
+      }}
     >
       <div className="container text-center">
         <div className="d-flex justify-content-center gap-3 mb-1">
           <Link
             to="/about"
-            className="text-decoration-underline"
-            style={{ fontSize: "0.75rem", color: "#8a9ba8", fontWeight: "500" }}
+            style={{
+              fontSize: "0.75rem",
+              color: "#bbb",
+              fontWeight: 500,
+              textDecoration: "none",
+            }}
           >
             About
           </Link>
           <Link
             to="/contact"
-            className="text-decoration-underline"
-            style={{ fontSize: "0.75rem", color: "#8a9ba8", fontWeight: "500" }}
+            style={{
+              fontSize: "0.75rem",
+              color: "#bbb",
+              fontWeight: 500,
+              textDecoration: "none",
+            }}
           >
             Contact
           </Link>
         </div>
-
         <div
-          style={{
-            fontSize: "0.65rem",
-            letterSpacing: "0.5px",
-            color: "#a2b2be",
-          }}
+          style={{ fontSize: "0.65rem", letterSpacing: "0.5px", color: "#ccc" }}
         >
           &copy; {currentYear} ALL RIGHTS RESERVED.
         </div>
