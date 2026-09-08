@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -21,9 +22,7 @@ const Profile = ({ user, setUser }) => {
   );
 
   useEffect(() => {
-    if (user) {
-      setFormData({ name: user.name, email: user.email });
-    }
+    if (user) setFormData({ name: user.name, email: user.email });
   }, [user]);
 
   useEffect(() => {
@@ -43,53 +42,37 @@ const Profile = ({ user, setUser }) => {
   const stats = useMemo(() => {
     if (!tasks.length)
       return { weekCount: 0, monthCount: 0, totalCompleted: 0 };
-
     const now = new Date();
-
     const startOfWeek = new Date(now);
     const dayOfWeek = now.getDay();
-    const distanceToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    startOfWeek.setDate(now.getDate() - distanceToMonday);
+    startOfWeek.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
     startOfWeek.setHours(0, 0, 0, 0);
-
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    let weekCount = 0;
-    let monthCount = 0;
-    let totalCompleted = 0;
-
+    let weekCount = 0,
+      monthCount = 0,
+      totalCompleted = 0;
     tasks.forEach((task) => {
       if (!task.isCompleted) return;
-
       totalCompleted++;
-
       const dateToUse = task.completedAt || task.updatedAt;
       if (!dateToUse) return;
-
       const taskDate = new Date(dateToUse);
-
       if (taskDate >= startOfWeek) weekCount++;
       if (taskDate >= startOfMonth) monthCount++;
     });
-
     return { weekCount, monthCount, totalCompleted };
   }, [tasks]);
 
   useEffect(() => {
     if (!tasks.length || !user) return;
-
     const dayStats = {};
-
     tasks.forEach((task) => {
       const dateToUse = task.completedAt || task.updatedAt;
       if (!task.isCompleted || !dateToUse) return;
-
       const dateKey = new Date(dateToUse).toLocaleDateString("sv-SE");
-
       const catWeight = user.categories?.find(
         (c) => c.name.toLowerCase() === task.category?.toLowerCase(),
       )?.weight;
-
       const fallbackWeights = {
         social: 10,
         physical: 15,
@@ -99,27 +82,20 @@ const Profile = ({ user, setUser }) => {
       };
       const energy =
         catWeight ?? fallbackWeights[task.category?.toLowerCase()] ?? 10;
-
-      if (!dayStats[dateKey]) {
-        dayStats[dateKey] = { totalEnergy: 0, count: 0 };
-      }
+      if (!dayStats[dateKey]) dayStats[dateKey] = { totalEnergy: 0, count: 0 };
       dayStats[dateKey].totalEnergy += energy;
       dayStats[dateKey].count += 1;
     });
-
     const dailyLimit = user.dailyEnergyLimit || 100;
     const finalizedMap = {};
-
     Object.keys(dayStats).forEach((date) => {
       const { totalEnergy, count } = dayStats[date];
       const isOverloaded = totalEnergy > dailyLimit;
-
       let level = 0;
       if (totalEnergy > dailyLimit) level = 4;
       else if (totalEnergy > dailyLimit * 0.6) level = 3;
-      else if (totalEnergy > 0.3 * dailyLimit) level = 2;
+      else if (totalEnergy > dailyLimit * 0.3) level = 2;
       else if (totalEnergy > 0) level = 1;
-
       finalizedMap[date] = {
         level,
         count,
@@ -128,12 +104,15 @@ const Profile = ({ user, setUser }) => {
         isOverloaded,
       };
     });
-
     setHeatmapData(finalizedMap);
   }, [tasks, user]);
 
   if (!user)
-    return <div className="p-5 text-center text-muted">Loading...</div>;
+    return (
+      <div style={{ padding: "3rem", textAlign: "center", color: "#aaa" }}>
+        Loading...
+      </div>
+    );
 
   const handleUpdate = async () => {
     try {
@@ -149,148 +128,415 @@ const Profile = ({ user, setUser }) => {
         setIsEditing(false);
       }
     } catch (err) {
-      console.error("Full Error Object:", err.response || err);
       alert(`Update failed: ${err.response?.data?.msg || "Check console"}`);
     }
   };
 
-  const formattedLastLogin = user.lastLogin
-    ? new Date(user.lastLogin).toLocaleString(undefined, {
-        dateStyle: "medium",
-        timeStyle: "short",
+  const memberSince = user.createdAt
+    ? new Date(user.createdAt).toLocaleDateString("en-GB", {
+        month: "long",
+        year: "numeric",
       })
-    : "First Session";
+    : "—";
 
   return (
-    <div className="container py-5" style={{ maxWidth: "800px" }}>
-      <header className="mb-5 border-bottom pb-4 d-flex justify-content-between align-items-end">
-        <div>
-          <h2 className="fw-bold text-dark mb-1">Hello, {user.name}</h2>
-          <p className="text-secondary mb-0">Your Account Identity</p>
-        </div>
-        <div className="d-flex gap-2">
-          <button
-            onClick={() => navigate("/settings")}
-            className="btn btn-outline-dark rounded-pill px-4 fw-bold"
-          >
-            Settings
-          </button>
-          <Logout />
-        </div>
-      </header>
-
-      <div className="bg-white border rounded-4 p-4 shadow-sm mb-4">
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h6 className="text-uppercase fw-bold text-muted small mb-0">
-            Identity Details
-          </h6>
-          <button
-            className="btn btn-sm btn-dark rounded-pill px-3"
-            onClick={() => (isEditing ? handleUpdate() : setIsEditing(true))}
-          >
-            {isEditing ? "Save Changes" : "Edit Profile"}
-          </button>
-        </div>
-
-        <div className="row">
-          <div className="col-md-6 mb-4">
-            <label className="text-muted small d-block mb-1">
-              REGISTERED NAME
-            </label>
-            {isEditing ? (
-              <input
-                className="form-control"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-            ) : (
-              <div className="h6 fw-bold mb-0 text-dark">{user.name}</div>
-            )}
+    <div style={{ backgroundColor: "#faf9f7", paddingBottom: "5rem" }}>
+      {/* Hero */}
+      <div
+        style={{
+          background:
+            "linear-gradient(160deg, #f3e5f5 0%, #e3f2fd 60%, #e8f5e9 100%)",
+          padding: "1.5rem 1.25rem 3rem",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+          }}
+        >
+          <div>
+            <p
+              style={{
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "2px",
+                color: "#b0b0b0",
+                marginBottom: "0.15rem",
+              }}
+            >
+              Your profile
+            </p>
+            <h1
+              style={{
+                fontSize: "1.6rem",
+                fontWeight: 800,
+                color: "#1a1a2e",
+                letterSpacing: "-0.5px",
+                marginBottom: "0.1rem",
+              }}
+            >
+              {user.name}
+            </h1>
+            <p style={{ color: "#aaa", fontSize: "0.78rem", margin: 0 }}>
+              Member since {memberSince}
+            </p>
           </div>
-          <div className="col-md-6 mb-4">
-            <label className="text-muted small d-block mb-1">
-              EMAIL ADDRESS
-            </label>
-            {isEditing ? (
-              <input
-                className="form-control"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-              />
-            ) : (
-              <div className="h6 fw-bold mb-0 text-dark">{user.email}</div>
-            )}
+          <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
+            <button
+              onClick={() => navigate("/settings")}
+              style={{
+                padding: "0.5rem 1rem",
+                backgroundColor: "white",
+                border: "1.5px solid #e0e0e0",
+                borderRadius: "100px",
+                fontWeight: 700,
+                fontSize: "0.78rem",
+                cursor: "pointer",
+                color: "#1a1a2e",
+              }}
+            >
+              Settings
+            </button>
+            <Logout />
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: "560px", margin: "0 auto", padding: "0 1rem" }}>
+        {/* Stats row */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "0.6rem",
+            marginTop: "-1.5rem",
+            marginBottom: "1.25rem",
+          }}
+        >
+          {[
+            {
+              value: stats.weekCount,
+              label: "This week",
+              textColor: "#7b1fa2",
+            },
+            {
+              value: stats.monthCount,
+              label: "This month",
+              textColor: "#1565c0",
+            },
+            {
+              value: stats.totalCompleted,
+              label: "All time",
+              textColor: "#2e7d32",
+            },
+          ].map(({ value, label, textColor }) => (
+            <div
+              key={label}
+              style={{
+                backgroundColor: "white",
+                borderRadius: "16px",
+                padding: "0.85rem 0.5rem",
+                textAlign: "center",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.07)",
+                border: "1px solid #f0f0f0",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "1.4rem",
+                  fontWeight: 800,
+                  color: textColor,
+                  lineHeight: 1,
+                }}
+              >
+                {value}
+              </div>
+              <div
+                style={{
+                  fontSize: "0.58rem",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                  color: "#bbb",
+                  marginTop: "0.2rem",
+                }}
+              >
+                {label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Identity details */}
+        <div
+          style={{
+            backgroundColor: "white",
+            borderRadius: "20px",
+            padding: "1.25rem",
+            marginBottom: "0.75rem",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+            border: "1px solid #f0f0f0",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "1rem",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "1.5px",
+                color: "#bbb",
+                margin: 0,
+              }}
+            >
+              Identity
+            </p>
+            <button
+              onClick={() => (isEditing ? handleUpdate() : setIsEditing(true))}
+              style={{
+                padding: "0.35rem 0.9rem",
+                backgroundColor: isEditing ? "#1a1a2e" : "transparent",
+                border: `1.5px solid ${isEditing ? "#1a1a2e" : "#e0e0e0"}`,
+                borderRadius: "100px",
+                fontWeight: 700,
+                fontSize: "0.75rem",
+                cursor: "pointer",
+                color: isEditing ? "white" : "#1a1a2e",
+              }}
+            >
+              {isEditing ? "Save" : "Edit"}
+            </button>
+          </div>
+
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
+          >
+            <div>
+              <p
+                style={{
+                  fontSize: "0.6rem",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "1px",
+                  color: "#ccc",
+                  marginBottom: "0.2rem",
+                }}
+              >
+                Name
+              </p>
+              {isEditing ? (
+                <input
+                  style={{
+                    width: "100%",
+                    border: "1.5px solid #e8e8e8",
+                    borderRadius: "10px",
+                    padding: "0.5rem 0.75rem",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                    outline: "none",
+                    backgroundColor: "#faf9f7",
+                  }}
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                />
+              ) : (
+                <p
+                  style={{
+                    fontWeight: 700,
+                    color: "#1a1a2e",
+                    margin: 0,
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  {user.name}
+                </p>
+              )}
+            </div>
+            <div>
+              <p
+                style={{
+                  fontSize: "0.6rem",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "1px",
+                  color: "#ccc",
+                  marginBottom: "0.2rem",
+                }}
+              >
+                Email
+              </p>
+              {isEditing ? (
+                <input
+                  style={{
+                    width: "100%",
+                    border: "1.5px solid #e8e8e8",
+                    borderRadius: "10px",
+                    padding: "0.5rem 0.75rem",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                    outline: "none",
+                    backgroundColor: "#faf9f7",
+                  }}
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                />
+              ) : (
+                <p
+                  style={{
+                    fontWeight: 600,
+                    color: "#666",
+                    margin: 0,
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  {user.email}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {isEditing && (
+            <button
+              onClick={() => setIsEditing(false)}
+              style={{
+                marginTop: "0.75rem",
+                background: "none",
+                border: "none",
+                color: "#aaa",
+                fontSize: "0.78rem",
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+
+        {/* Integrations */}
+        <div
+          style={{
+            backgroundColor: "white",
+            borderRadius: "20px",
+            padding: "1.25rem",
+            marginBottom: "0.75rem",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+            border: "1px solid #f0f0f0",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "0.75rem",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "1.5px",
+                color: "#bbb",
+                margin: 0,
+              }}
+            >
+              Integrations
+            </p>
+            <button
+              onClick={() => navigate("/settings")}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#aaa",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              Manage →
+            </button>
+          </div>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
+          >
+            {[
+              { label: "Google Calendar", connected: user.googleConnected },
+              { label: "iCal Feed", connected: user.icalConnected },
+            ].map(({ label, connected }) => (
+              <div
+                key={label}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "0.65rem 0.75rem",
+                  backgroundColor: "#faf9f7",
+                  borderRadius: "12px",
+                }}
+              >
+                <span
+                  style={{
+                    fontWeight: 600,
+                    fontSize: "0.85rem",
+                    color: "#1a1a2e",
+                  }}
+                >
+                  {label}
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.65rem",
+                    fontWeight: 700,
+                    padding: "0.2rem 0.65rem",
+                    borderRadius: "100px",
+                    backgroundColor: connected ? "#e8f5e9" : "#f5f5f5",
+                    color: connected ? "#2e7d32" : "#bbb",
+                  }}
+                >
+                  {connected ? "✓ Connected" : "Not connected"}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {isEditing && (
-          <button
-            className="btn btn-link btn-sm text-muted p-0"
-            onClick={() => setIsEditing(false)}
+        {/* Heatmap */}
+        {showHeatMap && (
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "20px",
+              padding: "1.25rem",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+              border: "1px solid #f0f0f0",
+            }}
           >
-            Cancel
-          </button>
+            <HeatMapGrid
+              data={heatmapData}
+              joinDate={user.createdAt}
+              user={user}
+              daysToView={28}
+            />
+          </div>
         )}
       </div>
-
-      {/* Activity Summary Table */}
-      <div className="bg-white border rounded-4 p-4 shadow-sm mb-4">
-        <h6 className="text-uppercase fw-bold text-muted small mb-3">
-          Activity Summary
-        </h6>
-        <div className="table-responsive">
-          <table className="table table-borderless align-middle mb-0">
-            <tbody>
-              <tr className="border-bottom">
-                <td className="ps-0 text-secondary py-3">Last Logged In</td>
-                <td className="pe-0 text-end fw-semibold text-dark py-3">
-                  {formattedLastLogin}
-                </td>
-              </tr>
-              <tr className="border-bottom">
-                <td className="ps-0 text-secondary py-3">
-                  Tasks Completed This Week
-                </td>
-                <td className="pe-0 text-end fw-bold text-dark py-3">
-                  {stats.weekCount}
-                </td>
-              </tr>
-              <tr className="border-bottom">
-                <td className="ps-0 text-secondary py-3">
-                  Tasks Completed This Month
-                </td>
-                <td className="pe-0 text-end fw-bold text-dark py-3">
-                  {stats.monthCount}
-                </td>
-              </tr>
-              <tr>
-                <td className="ps-0 text-secondary py-3">
-                  Total Tasks Completed
-                </td>
-                <td className="pe-0 text-end fw-bold text-dark py-3">
-                  {stats.totalCompleted}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Heatmap Section */}
-      {showHeatMap && (
-        <div className="bg-white border rounded-4 p-4 shadow-sm">
-          <HeatMapGrid
-            data={heatmapData}
-            joinDate={user.createdAt}
-            user={user}
-            daysToView={28}
-          />
-        </div>
-      )}
     </div>
   );
 };
