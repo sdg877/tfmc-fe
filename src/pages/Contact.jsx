@@ -29,128 +29,185 @@ const Contact = () => {
         method: "POST",
         body: formData,
       });
-
       const data = await response.json();
-
       if (data.success) {
         setResult("Message sent successfully! Speak soon. ✨");
         setStatusType("success");
         event.target.reset();
       } else {
-        console.error("Error", data);
         setResult(data.message);
         setStatusType("error");
       }
     } catch (error) {
-      console.error("Submit error", error);
       setResult("Something went wrong. Please try again.");
       setStatusType("error");
     }
   };
 
+  const inputStyle = {
+    width: "100%",
+    border: "1.5px solid #e8e8e8",
+    borderRadius: "12px",
+    padding: "0.65rem 0.85rem",
+    fontSize: "0.9rem",
+    fontWeight: 500,
+    outline: "none",
+    backgroundColor: "#faf9f7",
+    color: "#1a1a2e",
+    fontFamily: "inherit",
+  };
+
+  const labelStyle = {
+    fontSize: "0.6rem",
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: "1px",
+    color: "#bbb",
+    marginBottom: "0.3rem",
+    display: "block",
+  };
+
   return (
-    <div className="container mt-4">
+    <div style={{ backgroundColor: "#faf9f7", paddingBottom: "5rem" }}>
+      {/* Hero */}
       <div
-        className="card border-0 rounded-4 shadow-sm p-4 mx-auto"
-        style={{ maxWidth: "600px", backgroundColor: "#fff" }}
+        style={{
+          background:
+            "linear-gradient(160deg, #f3e5f5 0%, #e3f2fd 60%, #e8f5e9 100%)",
+          padding: "1.5rem 1.25rem 3rem",
+          textAlign: "center",
+        }}
       >
-        <h4 className="fw-bold text-dark text-center mb-2">Get in Touch</h4>
-
         <p
-          className="text-muted small text-center mb-3 px-2"
-          style={{ lineHeight: "1.5" }}
+          style={{
+            fontSize: "0.65rem",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "2px",
+            color: "#b0b0b0",
+            marginBottom: "0.15rem",
+          }}
         >
-          This application was built by a solo developer from concept to code.
-          Feedback and collaboration are highly appreciated.
+          Say hello
         </p>
+        <h1
+          style={{
+            fontSize: "1.6rem",
+            fontWeight: 800,
+            color: "#1a1a2e",
+            letterSpacing: "-0.5px",
+            marginBottom: "0.1rem",
+          }}
+        >
+          Get in Touch
+        </h1>
+        <p style={{ color: "#aaa", fontSize: "0.78rem", margin: 0 }}>
+          Built by one person. Feedback always welcome.
+        </p>
+      </div>
 
-        <hr className="mt-2 mb-3 opacity-10" />
-
-        <form onSubmit={onSubmit} className="d-grid gap-3">
-          <input
-            type="text"
-            name="botcheck"
-            className="d-none"
-            tabIndex="-1"
-            autoComplete="off"
-          />
-
-          <div>
-            <label className="form-label small fw-bold text-secondary mb-1">
-              Name
-            </label>
+      <div style={{ maxWidth: "480px", margin: "0 auto", padding: "0 1rem" }}>
+        {/* Form card — pulled up over gradient */}
+        <div
+          style={{
+            backgroundColor: "white",
+            borderRadius: "20px",
+            padding: "1.5rem",
+            marginTop: "-1.5rem",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+            border: "1px solid #f0f0f0",
+          }}
+        >
+          <form
+            onSubmit={onSubmit}
+            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+          >
             <input
               type="text"
-              name="name"
-              className="form-control rounded-3 border-light-subtle shadow-none p-2.5"
-              required
+              name="botcheck"
+              style={{ display: "none" }}
+              tabIndex="-1"
+              autoComplete="off"
             />
-          </div>
 
-          <div>
-            <label className="form-label small fw-bold text-secondary mb-1">
-              Email Address
-            </label>
-            <input
-              type="email"
-              name="email"
-              className="form-control rounded-3 border-light-subtle shadow-none p-2.5"
-              required
-            />
-          </div>
+            <div>
+              <label style={labelStyle}>Name</label>
+              <input type="text" name="name" required style={inputStyle} />
+            </div>
 
-          <div>
-            <label className="form-label small fw-bold text-secondary mb-1">
-              Subject
-            </label>
-            <select
-              name="subject"
-              className="form-select rounded-3 border-light-subtle shadow-none p-2.5"
-              defaultValue=""
-              required
-              style={{ cursor: "pointer" }}
+            <div>
+              <label style={labelStyle}>Email Address</label>
+              <input type="email" name="email" required style={inputStyle} />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Subject</label>
+              <select
+                name="subject"
+                required
+                defaultValue=""
+                style={{ ...inputStyle, cursor: "pointer" }}
+              >
+                <option value="" disabled>
+                  Select a topic...
+                </option>
+                <option value="General Enquiry">General Enquiry</option>
+                <option value="Bug Report">Bug Report</option>
+                <option value="Feature Suggestion">Feature Suggestion</option>
+                <option value="Feedback">Feedback / Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Message</label>
+              <textarea
+                name="message"
+                rows="4"
+                required
+                style={{
+                  ...inputStyle,
+                  resize: "vertical",
+                  minHeight: "100px",
+                }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              style={{
+                padding: "0.85rem",
+                backgroundColor: "#1a1a2e",
+                color: "white",
+                borderRadius: "100px",
+                fontWeight: 700,
+                border: "none",
+                cursor: "pointer",
+                fontSize: "0.9rem",
+                marginTop: "0.25rem",
+              }}
             >
-              <option value="" disabled>
-                Select a topic...
-              </option>
-              <option value="General Enquiry">General Enquiry</option>
-              <option value="Bug Report">Bug Report</option>
-              <option value="Feature Suggestion">Feature Suggestion</option>
-              <option value="Feedback">Feedback / Other</option>
-            </select>
-          </div>
+              Send Message
+            </button>
+          </form>
 
-          <div>
-            <label className="form-label small fw-bold text-secondary mb-1">
-              Message
-            </label>
-            <textarea
-              name="message"
-              rows="4"
-              className="form-control rounded-3 border-light-subtle shadow-none p-2.5"
-              required
-            ></textarea>
-          </div>
-
-          <button
-            type="submit"
-            className="btn btn-dark rounded-pill py-2.5 fw-bold mt-1 shadow-sm"
-          >
-            Send Message
-          </button>
-        </form>
-
-        {result && (
-          <div
-            className={`alert mt-3 mb-0 small text-center rounded-3 border-0 ${
-              statusType === "success"
-                ? "bg-success-subtle text-success"
-                : "bg-danger-subtle text-danger"
-            }`}
-          >
-            {result}
-          </div>
-        )}
+          {result && (
+            <div
+              style={{
+                marginTop: "1rem",
+                padding: "0.75rem 1rem",
+                borderRadius: "12px",
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                textAlign: "center",
+                backgroundColor:
+                  statusType === "success" ? "#e8f5e9" : "#fce4ec",
+                color: statusType === "success" ? "#2e7d32" : "#c2185b",
+              }}
+            >
+              {result}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
