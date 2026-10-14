@@ -1,30 +1,38 @@
 import React, { useState } from "react";
 
-const EnergyWarningModal = ({ show, onClose, energyUsed, limit, level }) => {
+const EnergyWarningModal = ({
+  show,
+  onClose,
+  energyUsed, // spent + planned for today (what the warning is triggered by)
+  energySpent, // completed only (optional)
+  limit,
+  level,
+}) => {
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
   if (!show) return null;
 
-  const cleanEnergyUsed = Number(energyUsed) || 0;
+  const cleanPlanned = Number(energyUsed) || 0;
+  const cleanSpent = Number(energySpent) || 0;
   const cleanLimit = Number(limit) || 100;
-  const actualPercent = Math.round((cleanEnergyUsed / cleanLimit) * 100);
+  const actualPercent = Math.round((cleanPlanned / cleanLimit) * 100);
 
   const getMessage = () => {
     if (level >= 100)
       return {
         title: "CRITICAL LOAD",
-        text: `You've hit ${actualPercent}% of your limit. Stop adding and start resting.`,
+        text: `Your day is ${actualPercent}% booked. Stop adding and start resting.`,
         color: "text-danger",
       };
     if (level >= 90)
       return {
         title: "NEAR CAPACITY",
-        text: `You are at ${actualPercent}%. Choose your next task very carefully.`,
+        text: `Your day is ${actualPercent}% booked. Choose your next task very carefully.`,
         color: "text-warning",
       };
     return {
       title: "ENERGY ALERT",
-      text: `You've reached ${actualPercent}%. Consider winding down.`,
+      text: `Your day is ${actualPercent}% booked. Consider winding down.`,
       color: "text-info",
     };
   };
@@ -66,9 +74,16 @@ const EnergyWarningModal = ({ show, onClose, energyUsed, limit, level }) => {
 
             <div className="p-3 bg-light rounded-3 d-inline-block px-5 border">
               <span className="h2 fw-bold mb-0 text-dark">
-                {cleanEnergyUsed} / {cleanLimit}
+                {cleanPlanned} / {cleanLimit}
               </span>
-              <div className="text-muted small fw-bold mt-1">UNITS SPENT</div>
+              <div className="text-muted small fw-bold mt-1">
+                UNITS PLANNED
+              </div>
+              {energySpent !== undefined && (
+                <div className="text-muted small mt-1">
+                  {cleanSpent} spent so far
+                </div>
+              )}
             </div>
 
             <div className="mt-4 form-check d-flex justify-content-center align-items-center gap-2">
