@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import AppLoader from "../components/Layout/AppLoader";
 import TaskDetailModal from "../components/Tasks/TaskDetailModal";
+import QuickAddTask from "../components/Tasks/QuickAddTask";
 
 const pastelPalette = [
   { bg: "#f3e5f5", text: "#7b1fa2", border: "#ce93d8" },
@@ -25,6 +25,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState(null);
   const [modalMode, setModalMode] = useState("view");
+  const [showAddTask, setShowAddTask] = useState(false);
   const token = localStorage.getItem("token");
 
   const hour = new Date().getHours();
@@ -74,6 +75,11 @@ const Home = () => {
       fetchData();
     }
   }, [token]);
+
+  const handleTaskAdded = (newTask) => {
+    setTasks((prev) => [newTask, ...prev]);
+    setShowAddTask(false);
+  };
 
   const handleUpdateTask = (updatedTask) => {
     setTasks((prev) =>
@@ -149,7 +155,6 @@ const Home = () => {
             textAlign: "center",
           }}
         >
-
           <h1
             style={{
               fontSize: "1.75rem",
@@ -233,6 +238,38 @@ const Home = () => {
         onToggleComplete={handleToggleComplete}
         getCategoryStyle={getCategoryStyle}
       />
+
+      {/* Add task modal */}
+      {showAddTask && (
+        <div
+          className="modal show d-block"
+          style={{
+            backgroundColor: "rgba(0,0,0,0.5)",
+            backdropFilter: "blur(4px)",
+            zIndex: 2000,
+          }}
+          onClick={() => setShowAddTask(false)}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content border-0 rounded-4 shadow-lg">
+              <div className="modal-header border-0 pb-0">
+                <h5 className="fw-bold text-dark mb-0">Add a task</h5>
+                <button
+                  type="button"
+                  className="btn-close shadow-none"
+                  onClick={() => setShowAddTask(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <QuickAddTask onTaskAdded={handleTaskAdded} user={user} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Compact hero */}
       <div
@@ -535,21 +572,23 @@ const Home = () => {
               >
                 Nothing on the list for today.
               </p>
-              <Link
-                to="/tasks"
+              <button
+                type="button"
+                onClick={() => setShowAddTask(true)}
                 style={{
                   display: "inline-block",
                   padding: "0.6rem 1.5rem",
                   backgroundColor: "#1a1a2e",
                   color: "white",
+                  border: "none",
                   borderRadius: "100px",
                   fontWeight: 700,
-                  textDecoration: "none",
                   fontSize: "0.8rem",
+                  cursor: "pointer",
                 }}
               >
                 + Add a task
-              </Link>
+              </button>
             </div>
           )}
         </div>
