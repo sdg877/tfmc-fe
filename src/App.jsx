@@ -23,6 +23,7 @@ import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Help from "./pages/Help";
 import Notifications from "./components/Layout/Notifications";
+import OverdueCleanupManager from "./components/Tasks/OverdueCleanupManager";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -129,6 +130,7 @@ function App() {
               />
             </Routes>
           </main>
+          {user && <OverdueCleanupManager user={user} />}
           <Footer />
         </div>
       </Router>
