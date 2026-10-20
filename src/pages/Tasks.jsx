@@ -7,7 +7,6 @@ import EnergyProgress from "../components/Energy/EnergyProgress";
 import EnergyWarningModal from "../components/Energy/EnergyWarningModal";
 import AppLoader from "../components/Layout/AppLoader";
 import TaskDetailModal from "../components/Tasks/TaskDetailModal";
-import OverdueCleanupModal from "../components/Tasks/OverdueCleanupModal";
 
 const pastelPalette = [
   { bg: "#FFF0F5", text: "#C71585", border: "#FFB6C1" },
@@ -41,7 +40,6 @@ const Tasks = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [modalMode, setModalMode] = useState("view");
   const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [overdueQueue, setOverdueQueue] = useState([]);
 
   const [energyViewMode, setEnergyViewMode] = useState(() => {
     return localStorage.getItem("energyViewMode") || "battery";
@@ -123,17 +121,6 @@ const Tasks = () => {
         });
         setTasks(resTasks.data);
 
-        const todayMidnight = new Date();
-        todayMidnight.setHours(0, 0, 0, 0);
-
-        const overdue = resTasks.data.filter((t) => {
-          if (t.isCompleted || !t.dueDate) return false;
-          return (
-            new Date(t.dueDate).setHours(0, 0, 0, 0) < todayMidnight.getTime()
-          );
-        });
-        setOverdueQueue(overdue);
-
         const resUser = await axios.get(`${baseURL}/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -199,48 +186,21 @@ const Tasks = () => {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  const handleCleanComplete = async (task, dateTarget) => {
-    try {
-      const completedTimestamp =
-        dateTarget === "today"
-          ? new Date().toISOString()
-          : new Date(task.dueDate).toISOString();
-
-      const res = await axios.put(
-        `${baseURL}/tasks/${task._id}`,
-        {
-          isCompleted: true,
-          completedAt: completedTimestamp,
-        },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-
-      setTasks((prev) => prev.map((t) => (t._id === task._id ? res.data : t)));
-      setOverdueQueue((prev) => prev.filter((o) => o._id !== task._id));
-    } catch (err) {
-      console.error("Clean complete failed", err);
-    }
-  };
-
-  const handleCleanMoveToToday = async (task) => {
-    try {
-      const todayString = new Date().toISOString().split("T")[0];
-      const res = await axios.put(
-        `${baseURL}/tasks/${task._id}`,
-        { dueDate: todayString, isPlannedForToday: true },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-
-      setTasks((prev) => prev.map((t) => (t._id === task._id ? res.data : t)));
-      setOverdueQueue((prev) => prev.filter((o) => o._id !== task._id));
-    } catch (err) {
-      console.error("Clean update date failed", err);
-    }
-  };
-
-  const handleCleanSkip = (task) => {
-    setOverdueQueue((prev) => prev.filter((o) => o._id !== task._id));
-  };
+  // Refresh tasks when the global overdue popup (in App.jsx) changes something
+  useEffect(() => {
+    const refreshTasks = async () => {
+      try {
+        const res = await axios.get(`${baseURL}/tasks`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setTasks(res.data);
+      } catch (err) {
+        console.error("Task refresh failed", err);
+      }
+    };
+    window.addEventListener("tasks-changed", refreshTasks);
+    return () => window.removeEventListener("tasks-changed", refreshTasks);
+  }, [baseURL, token]);
 
   const handleTaskAdded = (newTask) => {
     setTasks([newTask, ...tasks]);
@@ -535,16 +495,6 @@ const Tasks = () => {
             tasks={tasks}
           />
         </div>
-      )}
-
-      {overdueQueue.length > 0 && (
-        <OverdueCleanupModal
-          tasks={overdueQueue}
-          onComplete={handleCleanComplete}
-          onMoveToToday={handleCleanMoveToToday}
-          onSkip={handleCleanSkip}
-          onClose={() => setOverdueQueue([])}
-        />
       )}
     </div>
   );
