@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import axios from "axios";
-import CustomModal from "../layout/CustomModal";
+import CustomModal from "../Layout/CustomModal";
 
 const DeleteTask = ({ taskId, googleEventId, setTasks }) => {
   const [showModal, setShowModal] = useState(false);
